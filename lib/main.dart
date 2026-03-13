@@ -1,30 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router.dart';
 import 'core/theme.dart';
-import 'shared/providers/app_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AppProvider(),
-      child: const SouthSriLankaApp(),
+    const ProviderScope(
+      child: EontechApp(),
     ),
   );
 }
 
-class SouthSriLankaApp extends StatelessWidget {
-  const SouthSriLankaApp({super.key});
+class EontechApp extends ConsumerWidget {        
+  const EontechApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final themeMode = context.watch<AppProvider>().themeMode;
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
-      title: 'South Sri Lanka',
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: themeMode,
+      title: 'Eontech Tourist',
+      theme: AppTheme.light,                     
+      darkTheme: AppTheme.dark,                  
+      themeMode: ThemeMode.system,
       routerConfig: appRouter,
       debugShowCheckedModeBanner: false,
     );
