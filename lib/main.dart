@@ -12,15 +12,15 @@ void main() {
   );
 }
 
-class EontechApp extends ConsumerWidget {        // ← ConsumerWidget for Riverpod
+class EontechApp extends ConsumerWidget {        
   const EontechApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
       title: 'Eontech Tourist',
-      theme: AppTheme.light,                     // ← was: AppTheme.lightTheme
-      darkTheme: AppTheme.dark,                  // ← was: AppTheme.darkTheme
+      theme: AppTheme.light,                     
+      darkTheme: AppTheme.dark,                  
       themeMode: ThemeMode.system,
       routerConfig: appRouter,
       debugShowCheckedModeBanner: false,
