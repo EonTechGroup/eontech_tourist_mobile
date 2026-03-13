@@ -20,7 +20,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _OnboardingPage(
       tag: 'BEACHES & WILDLIFE',
       title: 'Discover Southern\nSri Lanka',
-      subtitle: 'Pristine beaches, whale watching,\nand ancient forts await you.',
+      subtitle:
+          'Pristine beaches, whale watching,\nand ancient forts await you.',
       imagePath: 'assets/images/1.jpg',
       accentColor: Color(0xFF006994),
     ),
@@ -34,7 +35,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _OnboardingPage(
       tag: 'ALL-IN-ONE',
       title: 'Book Everything\nSeamlessly',
-      subtitle: 'Hotels, tours, and restaurants —\nall in one place, instantly.',
+      subtitle:
+          'Hotels, tours, and restaurants —\nall in one place, instantly.',
       imagePath: 'assets/images/3.jpg',
       accentColor: Color(0xFFE53935),
     ),
@@ -87,9 +89,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 fit: StackFit.expand,
                 children: [
                   Image.asset(p.imagePath, fit: BoxFit.cover),
-                  ColoredBox(
-                    color: p.accentColor.withValues(alpha: 0.08),
-                  ),
+                  ColoredBox(color: p.accentColor.withValues(alpha: 0.08)),
                 ],
               );
             },
@@ -113,7 +113,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
 
-          //   Skip button 
+          //   Skip button
           SafeArea(
             child: Align(
               alignment: Alignment.topRight,
@@ -127,7 +127,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 18, vertical: 8,
+                      horizontal: 18,
+                      vertical: 8,
                     ),
                   ),
                   child: Text(
@@ -182,14 +183,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                     // Title
                     Text(
-                      page.title,
-                      style: GoogleFonts.poppins(
-                        fontSize: 34,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        height: 1.2,
-                      ),
-                    )
+                          page.title,
+                          style: GoogleFonts.poppins(
+                            fontSize: 34,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            height: 1.2,
+                          ),
+                        )
                         .animate(key: ValueKey('title_$_currentPage'))
                         .fadeIn(duration: 400.ms, delay: 80.ms)
                         .slideY(begin: 0.15, end: 0),
@@ -198,13 +199,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                     // Subtitle
                     Text(
-                      page.subtitle,
-                      style: GoogleFonts.poppins(
-                        fontSize: 15,
-                        color: Colors.white.withValues(alpha: 0.72),
-                        height: 1.55,
-                      ),
-                    )
+                          page.subtitle,
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            color: Colors.white.withValues(alpha: 0.72),
+                            height: 1.55,
+                          ),
+                        )
                         .animate(key: ValueKey('sub_$_currentPage'))
                         .fadeIn(duration: 400.ms, delay: 160.ms)
                         .slideY(begin: 0.15, end: 0),
@@ -212,9 +213,41 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     const SizedBox(height: 36),
 
                     // Dots + button row
+                    // Dots + button row
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                        // Back button (hidden on first page)
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 300),
+                          opacity: _currentPage > 0 ? 1.0 : 0.0,
+                          child: GestureDetector(
+                            onTap: _currentPage > 0
+                                ? () => _pageController.previousPage(
+                                    duration: const Duration(milliseconds: 500),
+                                    curve: Curves.easeInOutCubic,
+                                  )
+                                : null,
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.15),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Dots indicator (centered)
                         SmoothPageIndicator(
                           controller: _pageController,
                           count: _pages.length,
@@ -227,21 +260,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             spacing: 6,
                           ),
                         ),
+
+                        // Next / Get Started
                         _currentPage == _pages.length - 1
                             ? _GetStartedButton(
-                                accentColor: page.accentColor,
-                                onTap: _nextPage,
-                              )
-                                .animate(key: const ValueKey('last_btn'))
-                                .fadeIn(duration: 300.ms)
-                                .scale(begin: const Offset(0.9, 0.9))
+                                    accentColor: page.accentColor,
+                                    onTap: _nextPage,
+                                  )
+                                  .animate(key: const ValueKey('last_btn'))
+                                  .fadeIn(duration: 300.ms)
+                                  .scale(begin: const Offset(0.9, 0.9))
                             : _CircleNextButton(
-                                accentColor: page.accentColor,
-                                onTap: _nextPage,
-                              )
-                                .animate(key: ValueKey('btn_$_currentPage'))
-                                .fadeIn(duration: 300.ms)
-                                .scale(begin: const Offset(0.9, 0.9)),
+                                    accentColor: page.accentColor,
+                                    onTap: _nextPage,
+                                  )
+                                  .animate(key: ValueKey('btn_$_currentPage'))
+                                  .fadeIn(duration: 300.ms)
+                                  .scale(begin: const Offset(0.9, 0.9)),
                       ],
                     ),
                   ],
@@ -255,7 +290,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-// Tag Chip 
+// Tag Chip
 
 class _TagChip extends StatelessWidget {
   final String label;
@@ -297,7 +332,7 @@ class _TagChip extends StatelessWidget {
   }
 }
 
-// Circle Next Button 
+// Circle Next Button
 
 class _CircleNextButton extends StatelessWidget {
   final Color accentColor;
@@ -322,17 +357,13 @@ class _CircleNextButton extends StatelessWidget {
             ),
           ],
         ),
-        child: Icon(
-          Icons.arrow_forward_rounded,
-          color: accentColor,
-          size: 24,
-        ),
+        child: Icon(Icons.arrow_forward_rounded, color: accentColor, size: 24),
       ),
     );
   }
 }
 
-// Get Started Button 
+// Get Started Button
 
 class _GetStartedButton extends StatelessWidget {
   final Color accentColor;
@@ -368,11 +399,7 @@ class _GetStartedButton extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Icon(
-              Icons.arrow_forward_rounded,
-              color: accentColor,
-              size: 18,
-            ),
+            Icon(Icons.arrow_forward_rounded, color: accentColor, size: 18),
           ],
         ),
       ),
