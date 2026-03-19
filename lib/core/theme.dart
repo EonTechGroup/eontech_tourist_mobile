@@ -8,6 +8,7 @@ class AppTheme {
   static const Color goldenSun   = Color(0xFFFFB300);
   static const Color coralRed    = Color(0xFFE53935);
   static const Color forestGreen = Color(0xFF2E7D32);
+  static const Color sunsetOrange = Color(0xFFFF7043);
   static const Color darkInk     = Color(0xFF1A1A2E);
   static const Color softGrey    = Color(0xFFF1F5F9);
   static const Color mutedText   = Color(0xFF64748B);
