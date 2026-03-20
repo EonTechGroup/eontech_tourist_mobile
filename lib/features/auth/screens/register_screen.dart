@@ -209,7 +209,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ── Progress steps ──────────────────
-                    _StepIndicator().animate().fadeIn(
+                    const _StepIndicator().animate().fadeIn(
                       duration: 400.ms,
                       delay: 100.ms,
                     ),
@@ -233,7 +233,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _SectionLabel(
+                          const _SectionLabel(
                             icon: Icons.person_outline,
                             label: 'Personal Details',
                           ),
@@ -399,7 +399,7 @@ class _StepIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return const Row(
       children: [
         _Step(number: '1', label: 'Details', isActive: true, isDone: false),
         _StepLine(isActive: false),

@@ -10,7 +10,7 @@ class EmergencyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final contacts = MockData.emergencyContacts;
+    const contacts = MockData.emergencyContacts;
 
     return Scaffold(
       backgroundColor: AppTheme.softGrey,
@@ -157,28 +157,28 @@ class EmergencyScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                _SafetyTip(
+                const _SafetyTip(
                   icon: Icons.local_hospital_outlined,
                   title: 'Nearest Hospital',
                   body: 'Karapitiya Teaching Hospital in Galle is the main referral hospital for Southern Province.',
                   color: AppTheme.coralRed,
                   index: 0,
                 ),
-                _SafetyTip(
+                const _SafetyTip(
                   icon: Icons.water_outlined,
                   title: 'Ocean Safety',
                   body: 'Always swim where lifeguards are present. Rip currents are common near Mirissa and Tangalle.',
                   color: AppTheme.oceanBlue,
                   index: 1,
                 ),
-                _SafetyTip(
+                const _SafetyTip(
                   icon: Icons.bug_report_outlined,
                   title: 'Wildlife Caution',
                   body: 'Never approach wild elephants or leopards. Keep windows closed near Yala buffer zones.',
                   color: AppTheme.forestGreen,
                   index: 2,
                 ),
-                _SafetyTip(
+                const _SafetyTip(
                   icon: Icons.thermostat_outlined,
                   title: 'Heat & Humidity',
                   body: 'Drink at least 3L of water daily. Avoid midday sun between 11am–3pm in dry season.',

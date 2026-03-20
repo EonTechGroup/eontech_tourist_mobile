@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -84,14 +86,14 @@ class ProfileScreen extends StatelessWidget {
                         color: AppTheme.oceanBlue,
                       ),
                       const SizedBox(width: 16),
-                      _StatChip(
+                       _StatChip(
                         icon: Icons.check_circle,
                         label: '0',
                         sublabel: 'Visited',
                         color: AppTheme.forestGreen,
                       ),
                       const SizedBox(width: 16),
-                      _StatChip(
+                      const _StatChip(
                         icon: Icons.star,
                         label: '0',
                         sublabel: 'Reviews',
@@ -173,7 +175,7 @@ class ProfileScreen extends StatelessWidget {
                     trailing: Switch(
                       value: provider.themeMode == ThemeMode.dark,
                       onChanged: (_) => provider.toggleTheme(),
-                      activeColor: AppTheme.oceanBlue,
+                      activeThumbColor: AppTheme.oceanBlue,
                     ),
                   ),
                   const Divider(height: 1, indent: 56),

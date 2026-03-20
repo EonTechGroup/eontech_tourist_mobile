@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "70293007713",
+    "project_id": "eontech-super",
+    "storage_bucket": "eontech-super.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:70293007713:android:894e847508fb6766ec6920",
+        "android_client_info": {
+          "package_name": "com.example.eontech_tourist_mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "70293007713-44btpqvd920t7squqfppku69ck14cqhb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrDYmeke846Kbs4D3m5oV5HrWY0fhNuTU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "70293007713-44btpqvd920t7squqfppku69ck14cqhb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

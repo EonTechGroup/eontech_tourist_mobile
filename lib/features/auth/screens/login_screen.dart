@@ -230,7 +230,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 24),
 
                       // ── Divider ──────────────────────────
-                      _OrDivider(
+                      const _OrDivider(
                         label: 'or sign in with',
                       ).animate().fadeIn(duration: 400.ms, delay: 380.ms),
 

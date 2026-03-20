@@ -19,33 +19,33 @@ class _ItineraryScreenState extends State<ItineraryScreen> {
   // Mock itinerary data
   final Map<int, List<_ItineraryEntry>> _itinerary = {
     1: [
-      _ItineraryEntry('09:00', 'Galle Fort', 'Start at the iconic Dutch fort',
+      const _ItineraryEntry('09:00', 'Galle Fort', 'Start at the iconic Dutch fort',
           Icons.fort, AppTheme.oceanBlue, true),
-      _ItineraryEntry('12:30', 'Unawatuna Beach',
+      const _ItineraryEntry('12:30', 'Unawatuna Beach',
           'Lunch & swimming at the bay', Icons.beach_access, AppTheme.sunsetOrange, false),
-      _ItineraryEntry('17:00', 'Jungle Beach',
+      const _ItineraryEntry('17:00', 'Jungle Beach',
           'Hidden gem for sunset views', Icons.landscape, AppTheme.forestGreen, false),
     ],
     2: [
-      _ItineraryEntry('08:00', 'Mirissa Beach',
+      const _ItineraryEntry('08:00', 'Mirissa Beach',
           'Morning surf session', Icons.surfing, AppTheme.oceanBlue, true),
-      _ItineraryEntry('14:00', 'Whale Watching',
+      const _ItineraryEntry('14:00', 'Whale Watching',
           'Blue whale season tour', Icons.sailing, AppTheme.deepTeal, false),
     ],
     3: [
-      _ItineraryEntry('06:00', 'Yala National Park',
+      const _ItineraryEntry('06:00', 'Yala National Park',
           'Safari — leopard territory', Icons.pets, AppTheme.sunsetOrange, true),
-      _ItineraryEntry('16:00', 'Kataragama Temple',
+      const _ItineraryEntry('16:00', 'Kataragama Temple',
           'Sacred pilgrimage site', Icons.temple_hindu, AppTheme.coralRed, false),
     ],
     4: [
-      _ItineraryEntry('10:00', 'Sinharaja Forest',
+      const _ItineraryEntry('10:00', 'Sinharaja Forest',
           'UNESCO World Heritage rainforest', Icons.forest, AppTheme.forestGreen, true),
     ],
     5: [
-      _ItineraryEntry('09:00', 'Tangalle Beach',
+      const _ItineraryEntry('09:00', 'Tangalle Beach',
           'Relaxed farewell morning', Icons.beach_access, AppTheme.oceanBlue, false),
-      _ItineraryEntry('15:00', 'Rekawa Turtle Watch',
+      const _ItineraryEntry('15:00', 'Rekawa Turtle Watch',
           'Nesting site evening tour', Icons.spa, AppTheme.deepTeal, true),
     ],
   };
@@ -96,7 +96,7 @@ class _ItineraryScreenState extends State<ItineraryScreen> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'South Sri Lanka · ${_totalDays}-Day Trip',
+                          'South Sri Lanka · $_totalDays-Day Trip',
                           style: GoogleFonts.nunito(
                             fontSize: 13,
                             color: Colors.white.withValues(alpha: 0.8),
@@ -401,7 +401,7 @@ class _TimelineCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Icon(Icons.drag_indicator,
+                  const Icon(Icons.drag_indicator,
                       color: AppTheme.borderColor, size: 20),
                 ],
               ),
