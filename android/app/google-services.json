@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "70293007713-g1egibh2t9uaqcqrsf1772uaklm35nto.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.eontech_tourist_mobile",
+            "certificate_hash": "c583e609ec491d37bee814545d91211d4b43c3ce"
+          }
+        },
+        {
           "client_id": "70293007713-44btpqvd920t7squqfppku69ck14cqhb.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,6 +37,13 @@
             {
               "client_id": "70293007713-44btpqvd920t7squqfppku69ck14cqhb.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "70293007713-ckv0oek2seta6t6v9jli8g7fjf3slad7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.eontechTouristMobile"
+              }
             }
           ]
         }
