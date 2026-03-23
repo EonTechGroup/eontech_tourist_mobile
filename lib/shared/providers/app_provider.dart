@@ -147,4 +147,12 @@ class AppProvider extends ChangeNotifier {
     _hasSeenOnboarding = true;
     notifyListeners();
   }
+
+  Future<void> fetchNearbyPlaces({required bool refresh}) async {}
+
+  void listenToOffers() {}
+
+  Future<void> fetchNearbyOffers({required double lat, required double lng, required bool refresh}) async {}
+
+  void stopListeningOffers() {}
 }

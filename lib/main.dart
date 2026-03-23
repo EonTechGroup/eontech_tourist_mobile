@@ -1,6 +1,11 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import 'core/providers/auth_provider.dart';
+import 'core/providers/businesses_provider.dart';
+import 'core/providers/offers_provider.dart';
+import 'core/providers/places_provider.dart';
 import 'core/router.dart';
 import 'core/theme.dart';
 import 'firebase_options.dart';
@@ -8,12 +13,21 @@ import 'shared/providers/app_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AppProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AppProvider()),
+        ChangeNotifierProvider(create: (_) => AuthNotifier()),
+        ChangeNotifierProvider(create: (_) => PlacesProvider()), 
+        ChangeNotifierProvider(create: (_) => OffersProvider()),
+        ChangeNotifierProvider(create: (_) => BusinessesProvider()),
+      ],
       child: const SouthSriLankaApp(),
     ),
   );
@@ -24,7 +38,9 @@ class SouthSriLankaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Watch themeMode from AppProvider
     final themeMode = context.watch<AppProvider>().themeMode;
+
     return MaterialApp.router(
       title: 'South Sri Lanka',
       theme: AppTheme.light,

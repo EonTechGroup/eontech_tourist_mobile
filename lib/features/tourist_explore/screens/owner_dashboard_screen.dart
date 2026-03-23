@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme.dart';
@@ -129,7 +128,7 @@ class OwnerDashboardScreen extends StatelessWidget {
                       color: AppTheme.sunsetOrange,
                     ),
                     const SizedBox(width: 12),
-                    _StatCard(
+                    const _StatCard(
                       label: 'Views Today',
                       value: '48',
                       icon: Icons.visibility_outlined,
@@ -1382,11 +1381,11 @@ class _SheetField extends StatelessWidget {
             fillColor: AppTheme.softGrey,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: AppTheme.borderColor),
+              borderSide: const BorderSide(color: AppTheme.borderColor),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: AppTheme.borderColor),
+              borderSide: const BorderSide(color: AppTheme.borderColor),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),

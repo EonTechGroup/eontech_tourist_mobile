@@ -402,7 +402,7 @@ class _ReviewCardState extends State<_ReviewCard> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.reply_rounded,
+                  const Icon(Icons.reply_rounded,
                       size: 16, color: AppTheme.oceanBlue),
                   const SizedBox(width: 4),
                   Text('Reply',

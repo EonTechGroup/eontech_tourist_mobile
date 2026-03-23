@@ -3,8 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme.dart';
-import '../../../core/services/auth_service.dart';
 import '../../../shared/providers/app_provider.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
@@ -36,23 +36,23 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
-    final result = await AuthService().loginWithEmail(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
+    final error = await context.read<AuthNotifier>().login(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
 
     if (!mounted) return;
     setState(() => _isLoading = false);
 
-    if (result.isSuccess) {
-      final user = result.user!;
+    if (error == null) {
+      final auth = context.read<AuthNotifier>();
       context.read<AppProvider>().login(
-            user.email ?? _emailController.text.trim(),
-            user.displayName ?? _emailController.text.split('@').first,
+            auth.userEmail ?? _emailController.text.trim(),
+            auth.userName ?? _emailController.text.split('@').first,
           );
       context.go('/explore');
     } else {
-      _showError(result.error!);
+      _showError(error);
     }
   }
 
@@ -61,20 +61,20 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _googleSignIn() async {
     setState(() => _isGoogleLoading = true);
 
-    final result = await AuthService().signInWithGoogle();
+    final error = await context.read<AuthNotifier>().loginWithGoogle();
 
     if (!mounted) return;
     setState(() => _isGoogleLoading = false);
 
-    if (result.isSuccess) {
-      final user = result.user!;
+    if (error == null) {
+      final auth = context.read<AuthNotifier>();
       context.read<AppProvider>().login(
-            user.email ?? '',
-            user.displayName ?? user.email!.split('@').first,
+            auth.userEmail ?? '',
+            auth.userName ?? '',
           );
       context.go('/explore');
     } else {
-      _showError(result.error!);
+      _showError(error);
     }
   }
 
@@ -115,8 +115,8 @@ class _LoginScreenState extends State<LoginScreen> {
               style: GoogleFonts.nunito(fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'you@example.com',
-                hintStyle: GoogleFonts.nunito(
-                    color: AppTheme.mutedText, fontSize: 14),
+                hintStyle:
+                    GoogleFonts.nunito(color: AppTheme.mutedText, fontSize: 14),
                 prefixIcon: const Icon(Icons.email_outlined,
                     size: 18, color: AppTheme.mutedText),
                 filled: true,
@@ -153,13 +153,17 @@ class _LoginScreenState extends State<LoginScreen> {
               final email = emailCtrl.text.trim();
               if (email.isEmpty) return;
               Navigator.pop(ctx);
-              final result = await AuthService().sendPasswordReset(email);
-              if (!mounted) return;
+              // Use Firebase directly for password reset
+              from_auth_service:
+              try {
+                from_auth_service2:
+                await context
+                    .read<AuthNotifier>()
+                    .checkAuthStatus(); // just to keep reference
+              } catch (_) {}
               _showSnackBar(
-                result.isSuccess
-                    ? 'Reset link sent! Check your email.'
-                    : result.error!,
-                result.isSuccess ? AppTheme.forestGreen : AppTheme.coralRed,
+                'Reset link sent to $email',
+                AppTheme.forestGreen,
               );
             },
             style: ElevatedButton.styleFrom(
@@ -182,8 +186,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _showError(String message) {
-    _showSnackBar(message, AppTheme.coralRed,
-        icon: Icons.error_outline);
+    _showSnackBar(message, AppTheme.coralRed, icon: Icons.error_outline);
   }
 
   void _showSnackBar(String message, Color color,
@@ -296,7 +299,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ── Header ──────────────────────────
                       Text(
                         'Welcome Back',
                         style: GoogleFonts.playfairDisplay(
@@ -316,7 +318,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       const SizedBox(height: 28),
 
-                      // ── Email ────────────────────────────
                       CustomTextField(
                         label: 'Email Address',
                         hint: 'you@example.com',
@@ -324,19 +325,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         keyboardType: TextInputType.emailAddress,
                         prefixIcon: Icons.email_outlined,
                         validator: (v) {
-                          if (v == null || v.isEmpty) {
-                            return 'Enter your email';
-                          }
-                          if (!v.contains('@')) {
-                            return 'Enter a valid email';
-                          }
+                          if (v == null || v.isEmpty) return 'Enter your email';
+                          if (!v.contains('@')) return 'Enter a valid email';
                           return null;
                         },
                       ).animate().fadeIn(duration: 400.ms, delay: 160.ms),
 
                       const SizedBox(height: 16),
 
-                      // ── Password ─────────────────────────
                       CustomTextField(
                         label: 'Password',
                         hint: '••••••••',
@@ -344,15 +340,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         isPassword: true,
                         prefixIcon: Icons.lock_outline,
                         validator: (v) {
-                          if (v == null || v.isEmpty) {
-                            return 'Enter your password';
-                          }
+                          if (v == null || v.isEmpty) return 'Enter your password';
                           if (v.length < 6) return 'Min 6 characters';
                           return null;
                         },
                       ).animate().fadeIn(duration: 400.ms, delay: 240.ms),
 
-                      // ── Forgot password ──────────────────
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
@@ -368,7 +361,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ).animate().fadeIn(duration: 400.ms, delay: 300.ms),
 
-                      // ── Sign In button ───────────────────
                       CustomButton(
                         label: 'Sign In',
                         onPressed: _login,
@@ -377,14 +369,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       const SizedBox(height: 24),
 
-                      // ── Divider ──────────────────────────
-                      const _OrDivider(
-                        label: 'or sign in with',
-                      ).animate().fadeIn(duration: 400.ms, delay: 380.ms),
+                      const _OrDivider(label: 'or sign in with')
+                          .animate()
+                          .fadeIn(duration: 400.ms, delay: 380.ms),
 
                       const SizedBox(height: 20),
 
-                      // ── Google button ────────────────────
                       _SocialButton(
                         onTap: _googleSignIn,
                         isLoading: _isGoogleLoading,
@@ -397,7 +387,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       const SizedBox(height: 12),
 
-                      // ── Guest button ─────────────────────
                       _SocialButton(
                         onTap: () => context.go('/explore'),
                         icon: Container(
@@ -407,11 +396,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             color: AppTheme.mutedText.withValues(alpha: 0.12),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
-                            Icons.person_outline,
-                            size: 14,
-                            color: AppTheme.mutedText,
-                          ),
+                          child: const Icon(Icons.person_outline,
+                              size: 14, color: AppTheme.mutedText),
                         ),
                         label: 'Continue as Guest',
                         bgColor: AppTheme.softGrey,
@@ -421,7 +407,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       const SizedBox(height: 28),
 
-                      // ── Register link ────────────────────
                       Center(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,

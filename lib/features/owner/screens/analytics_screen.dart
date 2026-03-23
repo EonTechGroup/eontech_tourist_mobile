@@ -16,23 +16,23 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   // ── Mock data ─────────────────────────────────────────────────────────
   final List<_DayView> _viewsData = [
-    _DayView('Mon', 42), _DayView('Tue', 78), _DayView('Wed', 55),
-    _DayView('Thu', 91), _DayView('Fri', 123), _DayView('Sat', 148),
-    _DayView('Sun', 105),
+    const _DayView('Mon', 42), const _DayView('Tue', 78), const _DayView('Wed', 55),
+    const _DayView('Thu', 91), const _DayView('Fri', 123), const _DayView('Sat', 148),
+    const _DayView('Sun', 105),
   ];
 
   final List<_StatItem> _kpis = [
-    _StatItem('Total Views', '632', Icons.visibility_rounded, AppTheme.oceanBlue, '+12%'),
-    _StatItem('Saves', '89', Icons.bookmark_rounded, AppTheme.deepTeal, '+5%'),
-    _StatItem('Offer Clicks', '214', Icons.local_offer_rounded, const Color(0xFFF57F17), '+34%'),
-    _StatItem('Directions', '47', Icons.directions_rounded, AppTheme.forestGreen, '+8%'),
+    const _StatItem('Total Views', '632', Icons.visibility_rounded, AppTheme.oceanBlue, '+12%'),
+    const _StatItem('Saves', '89', Icons.bookmark_rounded, AppTheme.deepTeal, '+5%'),
+    const _StatItem('Offer Clicks', '214', Icons.local_offer_rounded, Color(0xFFF57F17), '+34%'),
+    const _StatItem('Directions', '47', Icons.directions_rounded, AppTheme.forestGreen, '+8%'),
   ];
 
   final List<_SourceItem> _sources = [
-    _SourceItem('Map Discovery', 0.44, AppTheme.oceanBlue),
-    _SourceItem('Flash Offers', 0.28, const Color(0xFFF57F17)),
-    _SourceItem('Search', 0.18, AppTheme.deepTeal),
-    _SourceItem('Direct Link', 0.10, AppTheme.forestGreen),
+    const _SourceItem('Map Discovery', 0.44, AppTheme.oceanBlue),
+    const _SourceItem('Flash Offers', 0.28, Color(0xFFF57F17)),
+    const _SourceItem('Search', 0.18, AppTheme.deepTeal),
+    const _SourceItem('Direct Link', 0.10, AppTheme.forestGreen),
   ];
 
   @override
@@ -98,7 +98,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   const SizedBox(height: 20),
 
                   // ── KPI grid ──────────────────────────────────────────
-                  _SectionTitle('Performance'),
+                  const _SectionTitle('Performance'),
                   const SizedBox(height: 12),
                   GridView.builder(
                     shrinkWrap: true,
@@ -117,13 +117,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   const SizedBox(height: 24),
 
                   // ── Views bar chart ───────────────────────────────────
-                  _SectionTitle('Daily Views'),
+                  const _SectionTitle('Daily Views'),
                   const SizedBox(height: 12),
                   _BarChart(data: _viewsData),
                   const SizedBox(height: 24),
 
                   // ── Traffic sources ───────────────────────────────────
-                  _SectionTitle('Traffic Sources'),
+                  const _SectionTitle('Traffic Sources'),
                   const SizedBox(height: 12),
                   _SourcesList(sources: _sources),
                   const SizedBox(height: 32),
@@ -319,7 +319,7 @@ class _BarChart extends StatelessWidget {
                           curve: Curves.easeOut,
                           height: 120 * ratio,
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
+                            gradient: const LinearGradient(
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
                               colors: [

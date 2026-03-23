@@ -3,8 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme.dart';
-import '../../../core/services/auth_service.dart';
 import '../../../shared/providers/app_provider.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
@@ -51,32 +51,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
     if (!_agreedToTerms) {
-      _showError(
-        'Please agree to Terms & Privacy Policy',
-        icon: Icons.warning_amber_rounded,
-      );
+      _showError('Please agree to Terms & Privacy Policy',
+          icon: Icons.warning_amber_rounded);
       return;
     }
     setState(() => _isLoading = true);
 
-    final result = await AuthService().registerWithEmail(
-      name: _nameController.text.trim(),
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
+    final error = await context.read<AuthNotifier>().register(
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          nationality: _selectedNationality,
+        );
 
     if (!mounted) return;
     setState(() => _isLoading = false);
 
-    if (result.isSuccess) {
-      final user = result.user!;
+    if (error == null) {
+      final auth = context.read<AuthNotifier>();
       context.read<AppProvider>().login(
-            user.email ?? _emailController.text.trim(),
-            user.displayName ?? _nameController.text.trim(),
+            auth.userEmail ?? _emailController.text.trim(),
+            auth.userName ?? _nameController.text.trim(),
           );
       context.go('/explore');
     } else {
-      _showError(result.error!);
+      _showError(error);
     }
   }
 
@@ -85,20 +84,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _googleSignIn() async {
     setState(() => _isGoogleLoading = true);
 
-    final result = await AuthService().signInWithGoogle();
+    final error = await context.read<AuthNotifier>().loginWithGoogle();
 
     if (!mounted) return;
     setState(() => _isGoogleLoading = false);
 
-    if (result.isSuccess) {
-      final user = result.user!;
+    if (error == null) {
+      final auth = context.read<AuthNotifier>();
       context.read<AppProvider>().login(
-            user.email ?? '',
-            user.displayName ?? user.email!.split('@').first,
+            auth.userEmail ?? '',
+            auth.userName ?? '',
           );
       context.go('/explore');
     } else {
-      _showError(result.error!);
+      _showError(error);
     }
   }
 
@@ -123,9 +122,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         backgroundColor: AppTheme.coralRed,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
         duration: const Duration(seconds: 3),
       ),
@@ -185,7 +183,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
                           ),
-                        ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.2),
+                        )
+                            .animate()
+                            .fadeIn(duration: 400.ms)
+                            .slideY(begin: 0.2),
                         const SizedBox(height: 4),
                         Text(
                           'Join thousands exploring South Sri Lanka',
@@ -212,7 +213,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ── Progress steps ──────────────────
                     const _StepIndicator().animate().fadeIn(
                           duration: 400.ms,
                           delay: 100.ms,
@@ -220,7 +220,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     const SizedBox(height: 20),
 
-                    // ── Form card ───────────────────────
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -249,9 +248,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             controller: _nameController,
                             prefixIcon: Icons.person_outline,
                             validator: (v) {
-                              if (v == null || v.isEmpty) {
+                              if (v == null || v.isEmpty)
                                 return 'Enter your name';
-                              }
                               return null;
                             },
                           ).animate().fadeIn(duration: 400.ms, delay: 150.ms),
@@ -265,12 +263,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             keyboardType: TextInputType.emailAddress,
                             prefixIcon: Icons.email_outlined,
                             validator: (v) {
-                              if (v == null || v.isEmpty) {
+                              if (v == null || v.isEmpty)
                                 return 'Enter your email';
-                              }
-                              if (!v.contains('@')) {
+                              if (!v.contains('@'))
                                 return 'Enter a valid email';
-                              }
                               return null;
                             },
                           ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
@@ -284,9 +280,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             isPassword: true,
                             prefixIcon: Icons.lock_outline,
                             validator: (v) {
-                              if (v == null || v.isEmpty) {
+                              if (v == null || v.isEmpty)
                                 return 'Enter a password';
-                              }
                               if (v.length < 6) return 'Min 6 characters';
                               return null;
                             },
@@ -307,7 +302,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     const SizedBox(height: 16),
 
-                    // ── Terms checkbox ──────────────────
                     _TermsCheckbox(
                       value: _agreedToTerms,
                       onChanged: (v) =>
@@ -316,7 +310,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     const SizedBox(height: 20),
 
-                    // ── Create account button ───────────
                     CustomButton(
                       label: 'Create Account',
                       onPressed: _register,
@@ -326,7 +319,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     const SizedBox(height: 20),
 
-                    // ── Or divider ──────────────────────
                     Row(
                       children: [
                         const Expanded(child: Divider(thickness: 1)),
@@ -348,7 +340,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     const SizedBox(height: 16),
 
-                    // ── Google button ───────────────────
                     _GoogleButton(
                       isLoading: _isGoogleLoading,
                       onTap: _googleSignIn,
@@ -356,7 +347,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     const SizedBox(height: 28),
 
-                    // ── Sign in link ────────────────────
                     Center(
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -494,8 +484,6 @@ class _StepLine extends StatelessWidget {
   }
 }
 
-// ── Section Label ─────────────────────────────────────────────
-
 class _SectionLabel extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -527,8 +515,6 @@ class _SectionLabel extends StatelessWidget {
     );
   }
 }
-
-// ── Nationality Dropdown ──────────────────────────────────────
 
 class _NationalityDropdown extends StatelessWidget {
   final String selected;
@@ -564,38 +550,25 @@ class _NationalityDropdown extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(
-                Icons.flag_outlined,
-                size: 20,
-                color: Color(0xFF9CA3AF),
-              ),
+              const Icon(Icons.flag_outlined,
+                  size: 20, color: Color(0xFF9CA3AF)),
               const SizedBox(width: 8),
               Expanded(
                 child: DropdownButton<String>(
                   value: selected,
                   isExpanded: true,
                   underline: const SizedBox.shrink(),
-                  icon: const Icon(
-                    Icons.keyboard_arrow_down,
-                    color: Color(0xFF9CA3AF),
-                  ),
-                  style: GoogleFonts.nunito(
-                    fontSize: 14,
-                    color: AppTheme.darkInk,
-                  ),
+                  icon: const Icon(Icons.keyboard_arrow_down,
+                      color: Color(0xFF9CA3AF)),
+                  style:
+                      GoogleFonts.nunito(fontSize: 14, color: AppTheme.darkInk),
                   items: nationalities
-                      .map(
-                        (n) => DropdownMenuItem(
-                          value: n,
-                          child: Text(
-                            n,
-                            style: GoogleFonts.nunito(
-                              fontSize: 14,
-                              color: AppTheme.darkInk,
-                            ),
-                          ),
-                        ),
-                      )
+                      .map((n) => DropdownMenuItem(
+                            value: n,
+                            child: Text(n,
+                                style: GoogleFonts.nunito(
+                                    fontSize: 14, color: AppTheme.darkInk)),
+                          ))
                       .toList(),
                   onChanged: onChanged,
                 ),
@@ -607,8 +580,6 @@ class _NationalityDropdown extends StatelessWidget {
     );
   }
 }
-
-// ── Terms Checkbox ────────────────────────────────────────────
 
 class _TermsCheckbox extends StatelessWidget {
   final bool value;
@@ -623,9 +594,8 @@ class _TermsCheckbox extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: value
-              ? AppTheme.oceanBlue.withValues(alpha: 0.05)
-              : Colors.white,
+          color:
+              value ? AppTheme.oceanBlue.withValues(alpha: 0.05) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: value ? AppTheme.oceanBlue : AppTheme.borderColor,
@@ -653,10 +623,8 @@ class _TermsCheckbox extends StatelessWidget {
             Expanded(
               child: RichText(
                 text: TextSpan(
-                  style: GoogleFonts.nunito(
-                    fontSize: 12,
-                    color: AppTheme.mutedText,
-                  ),
+                  style:
+                      GoogleFonts.nunito(fontSize: 12, color: AppTheme.mutedText),
                   children: [
                     const TextSpan(text: 'I agree to the '),
                     TextSpan(
@@ -686,8 +654,6 @@ class _TermsCheckbox extends StatelessWidget {
     );
   }
 }
-
-// ── Google Button ─────────────────────────────────────────────
 
 class _GoogleButton extends StatelessWidget {
   final bool isLoading;
@@ -776,11 +742,8 @@ class _GoogleButton extends StatelessWidget {
                       color: AppTheme.softGrey,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
-                      Icons.arrow_forward_ios,
-                      size: 12,
-                      color: AppTheme.mutedText,
-                    ),
+                    child: const Icon(Icons.arrow_forward_ios,
+                        size: 12, color: AppTheme.mutedText),
                   ),
                 ],
               ),
@@ -788,8 +751,6 @@ class _GoogleButton extends StatelessWidget {
     );
   }
 }
-
-// ── Google Logo Painter ───────────────────────────────────────
 
 class _GoogleLogoPainter extends CustomPainter {
   @override

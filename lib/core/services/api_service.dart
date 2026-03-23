@@ -1,107 +1,83 @@
-import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/business.dart';
+import '../models/offer.dart';
+import '../models/place.dart';
+import '../utils/mock_data.dart';
+
+class ApiResult<T> {
+  final bool isSuccess;
+  final T? data;
+  final String? error;
+
+  ApiResult.success(this.data) : isSuccess = true, error = null;
+  ApiResult.failure(this.error) : isSuccess = false, data = null;
+}
 
 class ApiService {
-  static const String _baseUrl = 'https://api.southsrilanka.lk/v1';
-  static const String _tokenKey = 'jwt_access_token';
-  static const String _refreshKey = 'jwt_refresh_token';
-
-  late final Dio _dio;
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
-
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
+  ApiService._internal();
 
-  ApiService._internal() {
-    _dio = Dio(BaseOptions(
-      baseUrl: _baseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 15),
-      headers: {'Content-Type': 'application/json'},
-    ));
+  static const String _accessTokenKey = 'access_token';
+  static const String _refreshTokenKey = 'refresh_token';
 
-    // ── Request interceptor: attach Bearer token ──────────────────────────
-    _dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          final token = await _storage.read(key: _tokenKey);
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
-          return handler.next(options);
-        },
-        onError: (DioException e, handler) async {
-          // 401 → attempt silent token refresh
-          if (e.response?.statusCode == 401) {
-            final refreshed = await _refreshToken();
-            if (refreshed) {
-              // Retry original request with new token
-              final token = await _storage.read(key: _tokenKey);
-              e.requestOptions.headers['Authorization'] = 'Bearer $token';
-              final cloned = await _dio.fetch(e.requestOptions);
-              return handler.resolve(cloned);
-            }
-          }
-          return handler.next(e);
-        },
-      ),
-    );
-  }
-
-  // ── Token Management ────────────────────────────────────────────────────
-
-  Future<void> saveTokens({
-    required String access,
-    required String refresh,
-  }) async {
-    await Future.wait([
-      _storage.write(key: _tokenKey, value: access),
-      _storage.write(key: _refreshKey, value: refresh),
-    ]);
+  /// ── Token Storage ─────────────────────────────
+  Future<void> saveTokens({required String access, required String refresh}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_accessTokenKey, access);
+      await prefs.setString(_refreshTokenKey, refresh);
+    } catch (e) {
+      // Handle error gracefully
+      print('Error saving tokens: $e');
+    }
   }
 
   Future<void> clearTokens() async {
-    await Future.wait([
-      _storage.delete(key: _tokenKey),
-      _storage.delete(key: _refreshKey),
-    ]);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_accessTokenKey);
+      await prefs.remove(_refreshTokenKey);
+    } catch (e) {
+      print('Error clearing tokens: $e');
+    }
   }
 
   Future<bool> hasValidToken() async {
-    final token = await _storage.read(key: _tokenKey);
-    return token != null && token.isNotEmpty;
-  }
-
-  Future<bool> _refreshToken() async {
     try {
-      final refresh = await _storage.read(key: _refreshKey);
-      if (refresh == null) return false;
-      final response = await _dio.post(
-        '/auth/refresh',
-        data: {'refresh_token': refresh},
-      );
-      final newAccess = response.data['access_token'] as String?;
-      final newRefresh = response.data['refresh_token'] as String?;
-      if (newAccess != null && newRefresh != null) {
-        await saveTokens(access: newAccess, refresh: newRefresh);
-        return true;
-      }
-      return false;
-    } catch (_) {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString(_accessTokenKey);
+      return token != null && token.isNotEmpty;
+    } catch (e) {
+      print('Error checking token: $e');
       return false;
     }
   }
 
-  // ── Auth Endpoints ──────────────────────────────────────────────────────
+  Future<String?> getAccessToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_accessTokenKey);
+    } catch (e) {
+      print('Error getting access token: $e');
+      return null;
+    }
+  }
 
-  Future<ApiResult<Map<String, dynamic>>> login({
-    required String email,
-    required String password,
-  }) async {
-    return _safeCall(() => _dio.post('/auth/login', data: {
-          'email': email,
-          'password': password,
-        }));
+  /// ── Auth APIs ─────────────────────────────
+  Future<ApiResult<Map<String, dynamic>>> login({required String email, required String password}) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      // Mock token and user
+      return ApiResult.success({
+        'user': {'id': 'u1', 'name': 'Demo User'},
+        'access_token': 'mock_access_token',
+        'refresh_token': 'mock_refresh_token',
+      });
+    } catch (e) {
+      return ApiResult.failure('Login failed: $e');
+    }
   }
 
   Future<ApiResult<Map<String, dynamic>>> register({
@@ -110,188 +86,144 @@ class ApiService {
     required String password,
     required String nationality,
   }) async {
-    return _safeCall(() => _dio.post('/auth/register', data: {
-          'name': name,
-          'email': email,
-          'password': password,
-          'nationality': nationality,
-        }));
+    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      return ApiResult.success({
+        'user': {'id': 'u1', 'name': name},
+        'access_token': 'mock_access_token',
+        'refresh_token': 'mock_refresh_token',
+      });
+    } catch (e) {
+      return ApiResult.failure('Registration failed: $e');
+    }
   }
 
   Future<ApiResult<Map<String, dynamic>>> googleAuth(String idToken) async {
-    return _safeCall(() => _dio.post('/auth/google', data: {'id_token': idToken}));
-  }
-
-  Future<void> logout() async {
+    await Future.delayed(const Duration(milliseconds: 500));
     try {
-      await _dio.post('/auth/logout');
-    } catch (_) {}
-    await clearTokens();
+      return ApiResult.success({
+        'user': {'id': 'u1', 'name': 'Google User'},
+        'access_token': 'mock_access_token',
+        'refresh_token': 'mock_refresh_token',
+      });
+    } catch (e) {
+      return ApiResult.failure('Google auth failed: $e');
+    }
   }
 
-  // ── Places Endpoints ────────────────────────────────────────────────────
+  Future<ApiResult<Map<String, dynamic>>> getMe() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      return ApiResult.success({
+        'id': 'u1',
+        'name': 'Demo User',
+        'email': 'demo@test.com',
+      });
+    } catch (e) {
+      return ApiResult.failure('Failed to fetch user: $e');
+    }
+  }
 
-  Future<ApiResult<Map<String, dynamic>>> fetchPlaces({
-    String? category,
-    String? district,
-    String? query,
-    double? lat,
-    double? lng,
-    double? radiusKm,
-    int page = 1,
-    int limit = 20,
-  }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'limit': limit,
-      if (category != null) 'category': category,
-      if (district != null) 'district': district,
-      if (query != null && query.isNotEmpty) 'q': query,
-      if (lat != null) 'lat': lat,
-      if (lng != null) 'lng': lng,
-      if (radiusKm != null) 'radius_km': radiusKm,
-    };
-    return _safeCall(() => _dio.get('/places', queryParameters: params));
+  /// ── Businesses ─────────────────────────────
+  Future<ApiResult<Map<String, dynamic>>> fetchMyBusinesses() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    return ApiResult.success({
+      'data': MockData.businesses.map((b) => _toMap(b)).toList(),
+    });
+  }
+
+  Future<ApiResult<Map<String, dynamic>>> createBusiness(Map<String, dynamic> body) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    MockData.businesses.add(Business(
+      id: 'b${MockData.businesses.length + 1}',
+      name: body['name'] ?? 'New Business',
+      description: body['description'] ?? '',
+      imageUrl: '',
+      latitude: body['latitude'] ?? 0,
+      longitude: body['longitude'] ?? 0,
+      address: body['address'] ?? '',
+      phone: body['phone'] ?? '',
+      website: body['website'] ?? '',
+      vibes: [],
+      hours: {},
+      rating: 0,
+    ));
+    return ApiResult.success({'data': MockData.businesses});
+  }
+
+  /// ── Places ─────────────────────────────
+  Future<ApiResult<Map<String, dynamic>>> getNearbyPlaces({required double lat, required double lng, double radiusKm = 50}) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    return ApiResult.success({
+      'data': MockData.places.map((p) => _toMapPlace(p)).toList(),
+    });
+  }
+
+  Future<ApiResult<Map<String, dynamic>>> searchPlaces(String query) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    final filtered = MockData.places.where((p) =>
+      p.name.toLowerCase().contains(query.toLowerCase()) ||
+      p.description.toLowerCase().contains(query.toLowerCase())
+    ).toList();
+    return ApiResult.success({'data': filtered.map((p) => _toMapPlace(p)).toList()});
   }
 
   Future<ApiResult<Map<String, dynamic>>> fetchPlaceDetail(String id) async {
-    return _safeCall(() => _dio.get('/places/$id'));
+    await Future.delayed(const Duration(milliseconds: 500));
+    final place = MockData.places.firstWhere((p) => p.id == id, orElse: () => MockData.places[0]);
+    return ApiResult.success(_toMapPlace(place));
   }
 
-  Future<ApiResult<Map<String, dynamic>>> toggleSavePlace(String placeId) async {
-    return _safeCall(() => _dio.post('/places/$placeId/save'));
+  /// ── Offers ─────────────────────────────
+  Future<ApiResult<Map<String, dynamic>>> fetchNearbyOffers({required double lat, required double lng}) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    return ApiResult.success({'data': MockData.offers.map((o) => _toMapOffer(o)).toList()});
   }
 
-  Future<ApiResult<Map<String, dynamic>>> markVisited(String placeId) async {
-    return _safeCall(() => _dio.post('/places/$placeId/visited'));
-  }
+  /// ── Helpers ─────────────────────────────
+  Map<String, dynamic> _toMap(Business b) => {
+    'id': b.id,
+    'name': b.name,
+    'description': b.description,
+    'image_url': b.imageUrl,
+    'latitude': b.latitude,
+    'longitude': b.longitude,
+    'address': b.address,
+    'phone': b.phone,
+    'website': b.website,
+    'vibes': b.vibes,
+    'hours': b.hours,
+    'rating': b.rating,
+  };
 
-  // ── Flash Offers ────────────────────────────────────────────────────────
+  Map<String, dynamic> _toMapPlace(Place p) => {
+    'id': p.id,
+    'name': p.name,
+    'description': p.description,
+    'category': p.category,
+    'district': p.district,
+    'latitude': p.latitude,
+    'longitude': p.longitude,
+    'rating': p.rating,
+    'reviewCount': p.reviewCount,
+    'imagePaths': p.imagePaths,
+    'entryFee': p.entryFee,
+    'bestTime': p.bestTime,
+    'tags': p.tags,
+    'hours': p.hours,
+    'isFeatured': p.isFeatured,
+    'contactNumber': p.contactNumber ?? '',
+    'website': p.website ?? '',
+  };
 
-  Future<ApiResult<Map<String, dynamic>>> fetchNearbyOffers({
-    required double lat,
-    required double lng,
-    double radiusKm = 5,
-  }) async {
-    return _safeCall(() => _dio.get('/offers/nearby', queryParameters: {
-          'lat': lat,
-          'lng': lng,
-          'radius_km': radiusKm,
-        }));
-  }
-
-  Future<ApiResult<Map<String, dynamic>>> createOffer({
-    required String businessId,
-    required String title,
-    required int discountPercent,
-    required int durationHours,
-    required double radiusKm,
-  }) async {
-    return _safeCall(() => _dio.post('/offers', data: {
-          'business_id': businessId,
-          'title': title,
-          'discount_percent': discountPercent,
-          'duration_hours': durationHours,
-          'radius_km': radiusKm,
-        }));
-  }
-
-  Future<ApiResult<Map<String, dynamic>>> deleteOffer(String offerId) async {
-    return _safeCall(() => _dio.delete('/offers/$offerId'));
-  }
-
-  // ── Business (Owner) ────────────────────────────────────────────────────
-
-  Future<ApiResult<Map<String, dynamic>>> fetchMyBusinesses() async {
-    return _safeCall(() => _dio.get('/owner/businesses'));
-  }
-
-  Future<ApiResult<Map<String, dynamic>>> createBusiness(
-      Map<String, dynamic> data) async {
-    return _safeCall(() => _dio.post('/owner/businesses', data: data));
-  }
-
-  Future<ApiResult<Map<String, dynamic>>> fetchOwnerStats(
-      String businessId) async {
-    return _safeCall(() => _dio.get('/owner/businesses/$businessId/stats'));
-  }
-
-  Future<ApiResult<Map<String, dynamic>>> fetchOwnerReviews(
-      String businessId) async {
-    return _safeCall(() => _dio.get('/owner/businesses/$businessId/reviews'));
-  }
-
-  Future<ApiResult<Map<String, dynamic>>> replyToReview({
-    required String reviewId,
-    required String reply,
-  }) async {
-    return _safeCall(() => _dio.post('/reviews/$reviewId/reply', data: {
-          'reply': reply,
-        }));
-  }
-
-  // ── Itinerary ───────────────────────────────────────────────────────────
-
-  Future<ApiResult<Map<String, dynamic>>> fetchItinerary() async {
-    return _safeCall(() => _dio.get('/itinerary'));
-  }
-
-  Future<ApiResult<Map<String, dynamic>>> saveItinerary(
-      Map<String, dynamic> data) async {
-    return _safeCall(() => _dio.put('/itinerary', data: data));
-  }
-
-  // ── Safe call wrapper ───────────────────────────────────────────────────
-
-  Future<ApiResult<Map<String, dynamic>>> _safeCall(
-    Future<Response> Function() call,
-  ) async {
-    try {
-      final response = await call();
-      final data = response.data;
-      if (data is Map<String, dynamic>) {
-        return ApiResult.success(data);
-      }
-      return ApiResult.success({'data': data});
-    } on DioException catch (e) {
-      return ApiResult.error(_dioErrorMessage(e));
-    } catch (e) {
-      return ApiResult.error('Unexpected error: $e');
-    }
-  }
-
-  String _dioErrorMessage(DioException e) {
-    switch (e.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-        return 'Connection timed out. Check your internet.';
-      case DioExceptionType.connectionError:
-        return 'No internet connection.';
-      case DioExceptionType.badResponse:
-        final msg = e.response?.data?['message'];
-        if (msg is String) return msg;
-        return 'Server error (${e.response?.statusCode})';
-      default:
-        return 'Something went wrong. Please try again.';
-    }
-  }
-}
-
-// ── Result wrapper ──────────────────────────────────────────────────────────
-
-class ApiResult<T> {
-  final T? data;
-  final String? error;
-  final bool isSuccess;
-
-  const ApiResult._({this.data, this.error, required this.isSuccess});
-
-  factory ApiResult.success(T data) =>
-      ApiResult._(data: data, isSuccess: true);
-
-  factory ApiResult.error(String message) =>
-      ApiResult._(error: message, isSuccess: false);
-
-  bool get isError => !isSuccess;
+  Map<String, dynamic> _toMapOffer(Offer o) => {
+    'id': o.id,
+    'business_id': o.businessId,
+    'business_name': o.businessName,
+    'title': o.title,
+    'description': o.description,
+    'discount_percent': o.discountPercent,
+    'expiresAt': o.expiresAt.toIso8601String(),
+    'radius_km': o.radiusKm,
+  };
 }
