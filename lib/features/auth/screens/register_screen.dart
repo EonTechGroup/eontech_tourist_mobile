@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../shared/providers/app_provider.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
@@ -45,77 +46,88 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  // ── Email register ──────────────────────────────────────────────────────
+
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
     if (!_agreedToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(
-                Icons.warning_amber_rounded,
-                color: Colors.white,
-                size: 18,
-              ),
-              const SizedBox(width: 10),
-              Text(
-                'Please agree to Terms & Privacy Policy',
+      _showError(
+        'Please agree to Terms & Privacy Policy',
+        icon: Icons.warning_amber_rounded,
+      );
+      return;
+    }
+    setState(() => _isLoading = true);
+
+    final result = await AuthService().registerWithEmail(
+      name: _nameController.text.trim(),
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (result.isSuccess) {
+      final user = result.user!;
+      context.read<AppProvider>().login(
+            user.email ?? _emailController.text.trim(),
+            user.displayName ?? _nameController.text.trim(),
+          );
+      context.go('/explore');
+    } else {
+      _showError(result.error!);
+    }
+  }
+
+  // ── Google Sign-In ──────────────────────────────────────────────────────
+
+  Future<void> _googleSignIn() async {
+    setState(() => _isGoogleLoading = true);
+
+    final result = await AuthService().signInWithGoogle();
+
+    if (!mounted) return;
+    setState(() => _isGoogleLoading = false);
+
+    if (result.isSuccess) {
+      final user = result.user!;
+      context.read<AppProvider>().login(
+            user.email ?? '',
+            user.displayName ?? user.email!.split('@').first,
+          );
+      context.go('/explore');
+    } else {
+      _showError(result.error!);
+    }
+  }
+
+  void _showError(String message, {IconData icon = Icons.error_outline}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
                 style: GoogleFonts.nunito(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
               ),
-            ],
-          ),
-          backgroundColor: AppTheme.coralRed,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          margin: const EdgeInsets.all(16),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-    context.read<AppProvider>().login(
-      _emailController.text.trim(),
-      _nameController.text.trim(),
-    );
-    context.go('/explore');
-  }
-
-  Future<void> _googleSignIn() async {
-    setState(() => _isGoogleLoading = true);
-    // TODO: implement Google Sign-In
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-    setState(() => _isGoogleLoading = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.info_outline, color: Colors.white, size: 18),
-            const SizedBox(width: 10),
-            Text(
-              'Google Sign-In coming soon!',
-              style: GoogleFonts.nunito(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
             ),
           ],
         ),
-        backgroundColor: AppTheme.darkInk,
+        backgroundColor: AppTheme.coralRed,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
         margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
@@ -126,7 +138,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       backgroundColor: AppTheme.softGrey,
       body: CustomScrollView(
         slivers: [
-          // ── Curved header ─────────────────────────────
           // ── Image header ──────────────────────────────
           SliverToBoxAdapter(
             child: SizedBox(
@@ -134,7 +145,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Background image
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(
                       bottom: Radius.circular(36),
@@ -144,8 +154,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       fit: BoxFit.cover,
                     ),
                   ),
-
-                  // Gradient overlay
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(
                       bottom: Radius.circular(36),
@@ -163,10 +171,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                   ),
-
-                  
-
-                  // Header text
                   Positioned(
                     bottom: 28,
                     left: 28,
@@ -210,9 +214,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   children: [
                     // ── Progress steps ──────────────────
                     const _StepIndicator().animate().fadeIn(
-                      duration: 400.ms,
-                      delay: 100.ms,
-                    ),
+                          duration: 400.ms,
+                          delay: 100.ms,
+                        ),
 
                     const SizedBox(height: 20),
 
@@ -239,7 +243,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           const SizedBox(height: 14),
 
-                          // Full name
                           CustomTextField(
                             label: 'Full Name',
                             hint: 'John Doe',
@@ -255,7 +258,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                           const SizedBox(height: 14),
 
-                          // Email
                           CustomTextField(
                             label: 'Email Address',
                             hint: 'you@example.com',
@@ -275,7 +277,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                           const SizedBox(height: 14),
 
-                          // Password
                           CustomTextField(
                             label: 'Password',
                             hint: '••••••••',
@@ -293,7 +294,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                           const SizedBox(height: 14),
 
-                          // Nationality
                           _NationalityDropdown(
                             selected: _selectedNationality,
                             nationalities: _nationalities,
@@ -331,7 +331,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       children: [
                         const Expanded(child: Divider(thickness: 1)),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 14),
                           child: Text(
                             'or sign up with',
                             style: GoogleFonts.nunito(
@@ -435,15 +436,15 @@ class _Step extends StatelessWidget {
             color: isActive
                 ? AppTheme.oceanBlue
                 : isDone
-                ? AppTheme.forestGreen
-                : Colors.white,
+                    ? AppTheme.forestGreen
+                    : Colors.white,
             shape: BoxShape.circle,
             border: Border.all(
               color: isActive
                   ? AppTheme.oceanBlue
                   : isDone
-                  ? AppTheme.forestGreen
-                  : AppTheme.borderColor,
+                      ? AppTheme.forestGreen
+                      : AppTheme.borderColor,
               width: 2,
             ),
           ),
@@ -730,7 +731,6 @@ class _GoogleButton extends StatelessWidget {
               )
             : Row(
                 children: [
-                  // Google logo box
                   Container(
                     width: 40,
                     height: 40,
@@ -747,10 +747,7 @@ class _GoogleButton extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   const SizedBox(width: 14),
-
-                  // Text
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -773,8 +770,6 @@ class _GoogleButton extends StatelessWidget {
                       ],
                     ),
                   ),
-
-                  // Arrow
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(

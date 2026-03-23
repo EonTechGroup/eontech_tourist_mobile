@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../shared/providers/app_provider.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
@@ -29,47 +30,189 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // ── Email login ─────────────────────────────────────────────────────────
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
+
+    final result = await AuthService().loginWithEmail(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
+
     if (!mounted) return;
-    context.read<AppProvider>().login(
-          _emailController.text.trim(),
-          _emailController.text.split('@').first,
-        );
-    context.go('/explore');
+    setState(() => _isLoading = false);
+
+    if (result.isSuccess) {
+      final user = result.user!;
+      context.read<AppProvider>().login(
+            user.email ?? _emailController.text.trim(),
+            user.displayName ?? _emailController.text.split('@').first,
+          );
+      context.go('/explore');
+    } else {
+      _showError(result.error!);
+    }
   }
+
+  // ── Google Sign-In ──────────────────────────────────────────────────────
 
   Future<void> _googleSignIn() async {
     setState(() => _isGoogleLoading = true);
-    // TODO: implement Google Sign-In
-    await Future.delayed(const Duration(seconds: 1));
+
+    final result = await AuthService().signInWithGoogle();
+
     if (!mounted) return;
     setState(() => _isGoogleLoading = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
+
+    if (result.isSuccess) {
+      final user = result.user!;
+      context.read<AppProvider>().login(
+            user.email ?? '',
+            user.displayName ?? user.email!.split('@').first,
+          );
+      context.go('/explore');
+    } else {
+      _showError(result.error!);
+    }
+  }
+
+  // ── Forgot password ─────────────────────────────────────────────────────
+
+  void _forgotPassword() {
+    final emailCtrl = TextEditingController(
+      text: _emailController.text.trim(),
+    );
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          'Reset Password',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.darkInk,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.info_outline, color: Colors.white, size: 18),
-            const SizedBox(width: 10),
             Text(
-              'Google Sign-In coming soon!',
+              'Enter your email and we\'ll send a reset link.',
               style: GoogleFonts.nunito(
                 fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: AppTheme.mutedText,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: emailCtrl,
+              keyboardType: TextInputType.emailAddress,
+              style: GoogleFonts.nunito(fontSize: 14),
+              decoration: InputDecoration(
+                hintText: 'you@example.com',
+                hintStyle: GoogleFonts.nunito(
+                    color: AppTheme.mutedText, fontSize: 14),
+                prefixIcon: const Icon(Icons.email_outlined,
+                    size: 18, color: AppTheme.mutedText),
+                filled: true,
+                fillColor: AppTheme.softGrey,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppTheme.borderColor),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppTheme.borderColor),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      const BorderSide(color: AppTheme.oceanBlue, width: 2),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 12),
               ),
             ),
           ],
         ),
-        backgroundColor: AppTheme.darkInk,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.nunito(color: AppTheme.mutedText),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final email = emailCtrl.text.trim();
+              if (email.isEmpty) return;
+              Navigator.pop(ctx);
+              final result = await AuthService().sendPasswordReset(email);
+              if (!mounted) return;
+              _showSnackBar(
+                result.isSuccess
+                    ? 'Reset link sent! Check your email.'
+                    : result.error!,
+                result.isSuccess ? AppTheme.forestGreen : AppTheme.coralRed,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.oceanBlue,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text(
+              'Send Link',
+              style: GoogleFonts.nunito(
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showError(String message) {
+    _showSnackBar(message, AppTheme.coralRed,
+        icon: Icons.error_outline);
+  }
+
+  void _showSnackBar(String message, Color color,
+      {IconData icon = Icons.check_circle_outline}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                style: GoogleFonts.nunito(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: color,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
         margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
@@ -82,7 +225,9 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           // ── Background image top half ───────────────────
           Positioned(
-            top: 0, left: 0, right: 0,
+            top: 0,
+            left: 0,
+            right: 0,
             height: MediaQuery.of(context).size.height * 0.38,
             child: Stack(
               fit: StackFit.expand,
@@ -101,7 +246,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 Positioned(
-                  bottom: 24, left: 28,
+                  bottom: 24,
+                  left: 28,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -133,7 +279,9 @@ class _LoginScreenState extends State<LoginScreen> {
           // ── Form card ───────────────────────────────────
           Positioned(
             top: MediaQuery.of(context).size.height * 0.32,
-            left: 0, right: 0, bottom: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
             child: Container(
               decoration: const BoxDecoration(
                 color: Colors.white,
@@ -208,7 +356,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: () {},
+                          onPressed: _forgotPassword,
                           child: Text(
                             'Forgot Password?',
                             style: GoogleFonts.nunito(
@@ -240,7 +388,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       _SocialButton(
                         onTap: _googleSignIn,
                         isLoading: _isGoogleLoading,
-                        icon: _GoogleLogo(),
+                        icon: const _GoogleLogo(),
                         label: 'Continue with Google',
                         bgColor: Colors.white,
                         borderColor: AppTheme.borderColor,
@@ -417,6 +565,8 @@ class _SocialButton extends StatelessWidget {
 // ── Google Logo ───────────────────────────────────────────────
 
 class _GoogleLogo extends StatelessWidget {
+  const _GoogleLogo();
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -437,7 +587,7 @@ class _GoogleLogoPainter extends CustomPainter {
       [270.0, 90.0, Color(0xFF4285F4)],
       [180.0, 90.0, Color(0xFFEA4335)],
       [135.0, 45.0, Color(0xFFFBBC05)],
-      [90.0,  45.0, Color(0xFF34A853)],
+      [90.0, 45.0, Color(0xFF34A853)],
     ];
 
     for (final seg in segments) {
