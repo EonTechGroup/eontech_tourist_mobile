@@ -4,7 +4,6 @@ import '../../core/models/place.dart';
 import '../../core/utils/mock_data.dart';
 
 class AppProvider extends ChangeNotifier {
-
   // ── Auth State ─────────────────────────────────────────
   AppUser? _currentUser;
   bool _isLoggedIn = false;
@@ -44,16 +43,12 @@ class AppProvider extends ChangeNotifier {
   List<Place> get filteredPlaces {
     return _allPlaces.where((place) {
       final matchCategory =
-          _selectedCategory == 'all' ||
-          place.category == _selectedCategory;
+          _selectedCategory == 'all' || place.category == _selectedCategory;
       final matchDistrict =
-          _selectedDistrict == 'All' ||
-          place.district == _selectedDistrict;
+          _selectedDistrict == 'All' || place.district == _selectedDistrict;
       final matchSearch =
           _searchQuery.isEmpty ||
-          place.name
-              .toLowerCase()
-              .contains(_searchQuery.toLowerCase()) ||
+          place.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           place.tags.any(
             (t) => t.toLowerCase().contains(_searchQuery.toLowerCase()),
           );
@@ -104,6 +99,7 @@ class AppProvider extends ChangeNotifier {
       _allPlaces.where((p) => _savedPlaceIds.contains(p.id)).toList();
 
   // ── Visited Places ─────────────────────────────────────
+  // ── Visited Places ─────────────────────────────────────
   final Set<String> _visitedPlaceIds = {};
 
   bool isVisited(String placeId) => _visitedPlaceIds.contains(placeId);
@@ -122,6 +118,17 @@ class AppProvider extends ChangeNotifier {
 
   int get visitedCount => _visitedPlaceIds.length;
 
+  // ✅ ADD THIS BLOCK 👇
+  // ── Bottom Navigation / Tabs ─────────────────────────
+  int _currentTab = 0;
+
+  int get currentTab => _currentTab;
+
+  void setTab(int index) {
+    _currentTab = index;
+    notifyListeners();
+  }
+
   // ── Theme ──────────────────────────────────────────────
   ThemeMode _themeMode = ThemeMode.light;
   ThemeMode get themeMode => _themeMode;
@@ -129,8 +136,9 @@ class AppProvider extends ChangeNotifier {
   bool get isDarkMode => _themeMode == ThemeMode.dark;
 
   void toggleTheme() {
-    _themeMode =
-        _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    _themeMode = _themeMode == ThemeMode.light
+        ? ThemeMode.dark
+        : ThemeMode.light;
     notifyListeners();
   }
 
@@ -152,7 +160,11 @@ class AppProvider extends ChangeNotifier {
 
   void listenToOffers() {}
 
-  Future<void> fetchNearbyOffers({required double lat, required double lng, required bool refresh}) async {}
+  Future<void> fetchNearbyOffers({
+    required double lat,
+    required double lng,
+    required bool refresh,
+  }) async {}
 
   void stopListeningOffers() {}
 }

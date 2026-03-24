@@ -8,85 +8,148 @@ class AuthService {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: ['email'],
-  );
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
 
+  User? get currentUser => _auth.currentUser;
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  // ── Email / Password Login ──────────────────────────────────────────────
   Future<AuthResult> loginWithEmail({
     required String email,
     required String password,
   }) async {
     try {
+      await _auth.setSettings(appVerificationDisabledForTesting: true);
       final credential = await _auth.signInWithEmailAndPassword(
         email: email.trim(),
         password: password,
       );
       return AuthResult.success(credential.user!);
     } on FirebaseAuthException catch (e) {
-      return AuthResult.error(e.message ?? 'Login failed');
+      return AuthResult.error(_friendlyError(e));
+    } catch (e) {
+      return AuthResult.error('Login failed: ${e.toString()}');
     }
   }
 
+  // ── Email / Password Register ───────────────────────────────────────────
   Future<AuthResult> registerWithEmail({
     required String name,
     required String email,
     required String password,
   }) async {
     try {
+      await _auth.setSettings(appVerificationDisabledForTesting: true);
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email.trim(),
         password: password,
       );
-
-      await credential.user!.updateDisplayName(name);
-
-      return AuthResult.success(credential.user!);
+      await credential.user!.updateDisplayName(name.trim());
+      await credential.user!.reload();
+      return AuthResult.success(_auth.currentUser!);
+    } on FirebaseAuthException catch (e) {
+      return AuthResult.error(_friendlyError(e));
     } catch (e) {
-      return AuthResult.error(e.toString());
+      return AuthResult.error('Registration failed: ${e.toString()}');
     }
   }
 
+  // ── Google Sign-In ──────────────────────────────────────────────────────
   Future<AuthResult> signInWithGoogle() async {
     try {
-      final googleUser = await _googleSignIn.signIn();
+      await _googleSignIn.signOut().catchError((_) {});
+
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
-        return AuthResult.error('Cancelled');
+        return AuthResult.error('Google sign-in was cancelled.');
       }
 
-      final googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
-      final credential = GoogleAuthProvider.credential(
+      if (googleAuth.idToken == null) {
+        return AuthResult.error(
+            'idToken is null. Check SHA-1 in Firebase Console.');
+      }
+
+      final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      final user =
+      final UserCredential userCredential =
           await _auth.signInWithCredential(credential);
 
-      return AuthResult.success(user.user!);
+      return AuthResult.success(userCredential.user!);
+    } on FirebaseAuthException catch (e) {
+      return AuthResult.error(_friendlyError(e));
     } catch (e) {
-      return AuthResult.error(e.toString());
+      return AuthResult.error('Google sign-in failed: ${e.toString()}');
     }
   }
 
+  // ── Password Reset ──────────────────────────────────────────────────────
+  Future<AuthResult> sendPasswordReset(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email.trim());
+      return AuthResult.success(null);
+    } on FirebaseAuthException catch (e) {
+      return AuthResult.error(_friendlyError(e));
+    } catch (e) {
+      return AuthResult.error('Could not send reset email. Try again.');
+    }
+  }
+
+  // ── Sign Out ────────────────────────────────────────────────────────────
   Future<void> signOut() async {
     await _auth.signOut();
-    await _googleSignIn.signOut();
+    await _googleSignIn.signOut().catchError((_) {});
+  }
+
+  // ── Friendly errors ─────────────────────────────────────────────────────
+  String _friendlyError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+        return 'No account found with this email.';
+      case 'wrong-password':
+        return 'Incorrect password. Please try again.';
+      case 'invalid-credential':
+        return 'Invalid email or password.';
+      case 'email-already-in-use':
+        return 'An account already exists with this email.';
+      case 'weak-password':
+        return 'Password is too weak. Use at least 6 characters.';
+      case 'invalid-email':
+        return 'Please enter a valid email address.';
+      case 'user-disabled':
+        return 'This account has been disabled.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please wait and try again.';
+      case 'network-request-failed':
+        return 'No internet connection. Check your network.';
+      case 'operation-not-allowed':
+        return 'This sign-in method is not enabled in Firebase.';
+      case 'account-exists-with-different-credential':
+        return 'Account exists with a different sign-in method.';
+      default:
+        return e.message ?? 'Authentication failed. Please try again.';
+    }
   }
 }
 
+// ── Result wrapper ──────────────────────────────────────────────────────────
 class AuthResult {
   final User? user;
   final String? error;
   final bool isSuccess;
 
-  AuthResult.success(this.user)
-      : isSuccess = true,
-        error = null;
+  const AuthResult._({this.user, this.error, required this.isSuccess});
 
-  AuthResult.error(this.error)
-      : isSuccess = false,
-        user = null;
+  factory AuthResult.success(User? user) =>
+      AuthResult._(user: user, isSuccess: true);
+
+  factory AuthResult.error(String message) =>
+      AuthResult._(error: message, isSuccess: false);
 
   bool get isError => !isSuccess;
 }

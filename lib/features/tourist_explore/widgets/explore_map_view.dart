@@ -3,12 +3,14 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
+
 import '../../../core/constants.dart';
 import '../../../core/models/place.dart';
 import '../../../core/theme.dart';
 
 class ExploreMapView extends StatefulWidget {
   final List<Place> places;
+
   const ExploreMapView({super.key, required this.places});
 
   @override
@@ -16,35 +18,61 @@ class ExploreMapView extends StatefulWidget {
 }
 
 class _ExploreMapViewState extends State<ExploreMapView> {
+  final MapController _mapController = MapController();
   Place? _selectedPlace;
+
+  // 🔑 Replace with your MapTiler API Key
+  static const String _mapTilerKey = "B0KHYBETqd5joxCCKflc";
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         FlutterMap(
+          mapController: _mapController,
           options: MapOptions(
             initialCenter: LatLng(
               AppConstants.defaultLat,
               AppConstants.defaultLng,
             ),
             initialZoom: AppConstants.defaultZoom,
+            minZoom: 5,
+            maxZoom: 19,
             onTap: (_, __) => setState(() => _selectedPlace = null),
           ),
           children: [
+            // 🌍 Production Tile Layer (MapTiler)
             TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.example.south_sri_lanka_app',
+              urlTemplate:
+                  'https://api.maptiler.com/maps/outdoor/{z}/{x}/{y}.png?key=$_mapTilerKey',
+              userAgentPackageName: 'com.eontech.tourist',
+              maxZoom: 19,
+
+              // 🔥 Error handling
+              errorTileCallback: (tile, error, stackTrace) {
+                debugPrint("Tile load error: $error");
+              },
             ),
+
+            // 📍 Markers
             MarkerLayer(
               markers: widget.places.map((place) {
                 final isSelected = _selectedPlace?.id == place.id;
+
                 return Marker(
                   point: LatLng(place.latitude, place.longitude),
-                  width: isSelected ? 48 : 40,
-                  height: isSelected ? 48 : 40,
+                  width: isSelected ? 50 : 40,
+                  height: isSelected ? 50 : 40,
                   child: GestureDetector(
-                    onTap: () => setState(() => _selectedPlace = place),
+                    onTap: () {
+                      setState(() => _selectedPlace = place);
+
+                      // 🔥 Smooth zoom to place
+                      _mapController.move(
+                        LatLng(place.latitude, place.longitude),
+                        15,
+                      );
+                    },
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       decoration: BoxDecoration(
@@ -58,16 +86,16 @@ class _ExploreMapViewState extends State<ExploreMapView> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
+                            color: Colors.black.withOpacity(0.25),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
                       child: const Icon(
                         Icons.location_on,
                         color: Colors.white,
-                        size: 20,
+                        size: 22,
                       ),
                     ),
                   ),
@@ -77,6 +105,7 @@ class _ExploreMapViewState extends State<ExploreMapView> {
           ],
         ),
 
+        // 📌 Selected Place Card
         if (_selectedPlace != null)
           Positioned(
             bottom: 16,
@@ -94,11 +123,12 @@ class _ExploreMapViewState extends State<ExploreMapView> {
             ),
           ),
 
+        // 📄 Attribution (Required)
         Positioned(
           bottom: 4,
           right: 8,
           child: Text(
-            '© OpenStreetMap',
+            '© MapTiler © OpenStreetMap',
             style: GoogleFonts.nunito(
               fontSize: 10,
               color: AppTheme.mutedText,
@@ -109,6 +139,10 @@ class _ExploreMapViewState extends State<ExploreMapView> {
     );
   }
 }
+
+// ─────────────────────────────────────────────
+// Place Card UI (unchanged but polished)
+// ─────────────────────────────────────────────
 
 class _MapPlaceCard extends StatelessWidget {
   final Place place;
@@ -123,7 +157,8 @@ class _MapPlaceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imagePath = place.imagePaths.isNotEmpty ? place.imagePaths.first : null;
+    final imagePath =
+        place.imagePaths.isNotEmpty ? place.imagePaths.first : null;
 
     return GestureDetector(
       onTap: onTap,
@@ -162,6 +197,8 @@ class _MapPlaceCard extends StatelessWidget {
                     ),
             ),
             const SizedBox(width: 12),
+
+            // 📄 Text Section
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,7 +224,8 @@ class _MapPlaceCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.star, size: 13, color: Color(0xFFFBBF24)),
+                      const Icon(Icons.star,
+                          size: 13, color: Color(0xFFFBBF24)),
                       const SizedBox(width: 2),
                       Text(
                         place.rating.toString(),
@@ -199,9 +237,11 @@ class _MapPlaceCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppTheme.categoryColor(place.category).withOpacity(0.12),
+                          color: AppTheme.categoryColor(place.category)
+                              .withOpacity(0.12),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -209,7 +249,8 @@ class _MapPlaceCard extends StatelessWidget {
                           style: GoogleFonts.nunito(
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
-                            color: AppTheme.categoryColor(place.category),
+                            color:
+                                AppTheme.categoryColor(place.category),
                           ),
                         ),
                       ),
@@ -218,21 +259,25 @@ class _MapPlaceCard extends StatelessWidget {
                 ],
               ),
             ),
+
+            // 🎯 Actions
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 GestureDetector(
                   onTap: onClose,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    child: const Icon(Icons.close, size: 18, color: AppTheme.mutedText),
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(Icons.close,
+                        size: 18, color: AppTheme.mutedText),
                   ),
                 ),
                 const SizedBox(height: 8),
                 GestureDetector(
                   onTap: onTap,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
                       color: AppTheme.oceanBlue,
                       borderRadius: BorderRadius.circular(8),

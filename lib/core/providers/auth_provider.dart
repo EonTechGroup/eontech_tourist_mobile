@@ -32,7 +32,6 @@ class AuthNotifier extends ChangeNotifier {
         _setUnauthenticated();
         return;
       }
-
       final result = await ApiService().getMe();
       if (result.isSuccess && result.data != null) {
         final user = result.data!;
@@ -62,8 +61,8 @@ class AuthNotifier extends ChangeNotifier {
     _setLoading(true);
     _error = null;
     try {
-      final firebase = await AuthService().registerWithEmail(
-          name: name, email: email, password: password);
+      final firebase = await AuthService()
+          .registerWithEmail(name: name, email: email, password: password);
       if (firebase.isError) return firebase.error;
 
       final backend = await ApiService().register(
@@ -76,7 +75,11 @@ class AuthNotifier extends ChangeNotifier {
         );
       }
 
-      _setAuthenticated(userId: firebase.user?.uid ?? '', userName: name, userEmail: email);
+      _setAuthenticated(
+        userId: firebase.user?.uid ?? '',
+        userName: name,
+        userEmail: email,
+      );
       return null;
     } catch (e) {
       return 'Registration failed: $e';
@@ -92,7 +95,8 @@ class AuthNotifier extends ChangeNotifier {
     _setLoading(true);
     _error = null;
     try {
-      final firebase = await AuthService().loginWithEmail(email: email, password: password);
+      final firebase =
+          await AuthService().loginWithEmail(email: email, password: password);
       if (firebase.isError) return firebase.error;
 
       final backend = await ApiService().login(email: email, password: password);
@@ -103,7 +107,6 @@ class AuthNotifier extends ChangeNotifier {
           access: backend.data?['access_token']?.toString() ?? '',
           refresh: backend.data?['refresh_token']?.toString() ?? '',
         );
-
         _setAuthenticated(
           userId: userData?['id']?.toString() ?? '',
           userName: userData?['name']?.toString() ?? '',
@@ -159,13 +162,27 @@ class AuthNotifier extends ChangeNotifier {
     }
   }
 
+  Future<String?> sendPasswordReset(String email) async {
+    try {
+      final result = await AuthService().sendPasswordReset(email);
+      if (result.isError) return result.error;
+      return null;
+    } catch (e) {
+      return 'Failed to send reset email: $e';
+    }
+  }
+
   Future<void> logout() async {
     await AuthService().signOut();
     await ApiService().clearTokens();
     _setUnauthenticated();
   }
 
-  void _setAuthenticated({required String userId, required String userName, required String userEmail}) {
+  void _setAuthenticated({
+    required String userId,
+    required String userName,
+    required String userEmail,
+  }) {
     _status = AuthStatus.authenticated;
     _userId = userId;
     _userName = userName;

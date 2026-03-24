@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+
 import '../../core/theme.dart';
 import '../../core/models/user.dart';
 import '../../shared/providers/app_provider.dart';
@@ -12,12 +13,13 @@ class MainScaffold extends StatelessWidget {
   final Widget child;
   const MainScaffold({super.key, required this.child});
 
-  // Map route to nav index
-  int _locationToIndex(String location) {
+  // ✅ Maps route → tab index
+  int _locationToIndex(String location, bool isOwner) {
     if (location.startsWith('/explore')) return 0;
     if (location.startsWith('/itinerary')) return 1;
     if (location.startsWith('/emergency')) return 2;
-    if (location.startsWith('/owner')) return 3;
+    if (isOwner && location.startsWith('/owner')) return 3;
+    if (!isOwner && location.startsWith('/offers')) return 3;
     if (location.startsWith('/profile')) return 4;
     return 0;
   }
@@ -26,22 +28,28 @@ class MainScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
     final isOwner = provider.currentUser?.role == UserRole.businessOwner;
-    final location = GoRouterState.of(context).uri.toString();
-    final currentIdx = _locationToIndex(location);
 
-    // Tab 3 changes dynamically for owner/offers
-    final tab3Icon = isOwner ? Icons.store_outlined : Icons.local_offer_outlined;
+    // ✅ Current route location
+    final location = GoRouterState.of(context).uri.toString();
+    final currentIdx = _locationToIndex(location, isOwner);
+
+    // ✅ Dynamic tab (Owner / Offers)
+    final tab3Icon =
+        isOwner ? Icons.store_outlined : Icons.local_offer_outlined;
     final tab3SelIcon = isOwner ? Icons.store : Icons.local_offer;
     final tab3Label = isOwner ? 'Business' : 'Offers';
-    final tab3Route = isOwner ? '/owner' : '/profile';
+    final tab3Route = isOwner ? '/owner' : '/offers';
 
     return Scaffold(
       extendBody: true,
       backgroundColor: AppTheme.softGrey,
+
+      // 🔹 Current screen
       body: child,
+
+      // 🔻 Bottom Navigation
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.transparent,
+        decoration: const BoxDecoration(
           boxShadow: [
             BoxShadow(
               color: Colors.black26,
@@ -58,35 +66,47 @@ class MainScaffold extends StatelessWidget {
           buttonBackgroundColor: AppTheme.deepTeal,
           animationDuration: const Duration(milliseconds: 300),
           animationCurve: Curves.easeOutCubic,
+
+          // ✅ Navigation using GoRouter
           onTap: (index) {
             HapticFeedback.lightImpact();
+
             switch (index) {
               case 0:
                 context.go('/explore');
                 break;
+
               case 1:
                 context.go('/itinerary');
                 break;
+
               case 2:
                 HapticFeedback.heavyImpact();
                 context.go('/emergency');
                 break;
+
               case 3:
                 context.go(tab3Route);
                 break;
+
               case 4:
                 context.go('/profile');
                 break;
             }
           },
+
           items: [
             _NavItem(
-              icon: currentIdx == 0 ? Icons.explore : Icons.explore_outlined,
+              icon: currentIdx == 0
+                  ? Icons.explore
+                  : Icons.explore_outlined,
               label: 'Explore',
               isSelected: currentIdx == 0,
             ),
             _NavItem(
-              icon: currentIdx == 1 ? Icons.map : Icons.map_outlined,
+              icon: currentIdx == 1
+                  ? Icons.map
+                  : Icons.map_outlined,
               label: 'Plan',
               isSelected: currentIdx == 1,
             ),
@@ -115,7 +135,9 @@ class MainScaffold extends StatelessWidget {
   }
 }
 
-// ── Nav item ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// 🔹 Nav Item Widget
+// ─────────────────────────────────────────────
 class _NavItem extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -149,6 +171,7 @@ class _NavItem extends StatelessWidget {
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeOutCubic,
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -174,13 +197,16 @@ class _NavItem extends StatelessWidget {
             )
           else
             Icon(icon, size: iconSize, color: iconColor),
+
           const SizedBox(height: 3),
+
           Text(
             label,
             style: GoogleFonts.nunito(
               fontSize: isEmergency ? 10 : 9,
-              fontWeight:
-                  (isSelected || isEmergency) ? FontWeight.w800 : FontWeight.w500,
+              fontWeight: (isSelected || isEmergency)
+                  ? FontWeight.w800
+                  : FontWeight.w500,
               color: labelColor,
               letterSpacing: 0.2,
             ),

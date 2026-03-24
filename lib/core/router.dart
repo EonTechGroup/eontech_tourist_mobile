@@ -1,63 +1,82 @@
 import 'package:eontech_tourist_mobile/features/owner/owner_dashboard_screen.dart';
+import 'package:eontech_tourist_mobile/features/tourist_explore/screens/business_detail_screen.dart';
+import 'package:eontech_tourist_mobile/features/tourist_explore/screens/offer_detail_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
+
+// Auth
 import '../features/auth/screens/onboarding_screen.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/register_screen.dart';
+
+// Tourist
 import '../features/tourist_explore/screens/explore_screen.dart';
 import '../features/places/screens/place_detail_screen.dart';
 import '../features/profile/screens/profile_screen.dart';
 import '../features/itinerary/screens/itinerary_screen.dart';
 import '../features/emergency/screens/emergency_screen.dart';
+import '../features/offers/screens/offers_screen.dart';
+
+// Owner
 import '../features/owner/screens/analytics_screen.dart';
 import '../features/owner/screens/reviews_screen.dart';
+
+// Map
 import '../features/map/screens/location_picker_screen.dart';
+
+// Shared
 import '../shared/widgets/main_scaffold.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/onboarding',
+
   routes: [
-    // ── Auth (no nav bar) ──────────────────────────────────────────────────
+    // ───────────────── AUTH (NO NAV BAR) ─────────────────
     GoRoute(
       path: '/onboarding',
-      builder: (context, _) =>
+      builder: (context, state) =>
           OnboardingScreen(onComplete: () => context.go('/login')),
     ),
+
     GoRoute(
       path: '/login',
       name: 'login',
-      builder: (_, __) => const LoginScreen(),
-    ),
-    GoRoute(
-      path: '/register',
-      builder: (_, __) => const RegisterScreen(),
+      builder: (context, state) => const LoginScreen(),
     ),
 
-    // ── Full-screen push routes (no nav bar) ───────────────────────────────
+    GoRoute(
+      path: '/register',
+      builder: (context, state) => const RegisterScreen(),
+    ),
+
+    // ───────────────── FULL SCREEN (NO NAV BAR) ──────────
     GoRoute(
       path: '/analytics',
       builder: (context, state) {
-        final name =
-            (state.extra as Map<String, dynamic>?)?['name'] as String? ??
-                'My Business';
+        final extra = state.extra as Map<String, dynamic>?;
+        final name = extra?['name'] ?? 'My Business';
+
         return AnalyticsScreen(businessName: name);
       },
     ),
+
     GoRoute(
       path: '/reviews',
       builder: (context, state) {
-        final name =
-            (state.extra as Map<String, dynamic>?)?['name'] as String? ??
-                'My Business';
+        final extra = state.extra as Map<String, dynamic>?;
+        final name = extra?['name'] ?? 'My Business';
+
         return ReviewsScreen(businessName: name);
       },
     ),
+
     GoRoute(
       path: '/location-picker',
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>?;
         final lat = extra?['lat'] as double?;
         final lng = extra?['lng'] as double?;
+
         return LocationPickerScreen(
           initialLocation:
               (lat != null && lng != null) ? LatLng(lat, lng) : null,
@@ -65,36 +84,76 @@ final GoRouter appRouter = GoRouter(
       },
     ),
 
-    // ── Shell (with nav bar) ───────────────────────────────────────────────
+    // ───────────────── MAIN SHELL (WITH NAV BAR) ─────────
     ShellRoute(
-      builder: (context, state, child) => MainScaffold(child: child),
+      builder: (context, state, child) {
+        return MainScaffold(child: child);
+      },
+
       routes: [
+        // ── Explore ──
         GoRoute(
           path: '/explore',
-          builder: (_, __) => const ExploreScreen(),
+          builder: (context, state) => const ExploreScreen(),
+
           routes: [
             GoRoute(
               path: 'place/:id',
-              builder: (context, state) =>
-                  PlaceDetailScreen(placeId: state.pathParameters['id']!),
+              builder: (context, state) {
+                final id = state.pathParameters['id']!;
+                return PlaceDetailScreen(placeId: id);
+              },
             ),
           ],
         ),
+
+        // ── Itinerary ──
         GoRoute(
           path: '/itinerary',
-          builder: (_, __) => const ItineraryScreen(),
+          builder: (context, state) => const ItineraryScreen(),
         ),
+
+        // ── Emergency ──
         GoRoute(
           path: '/emergency',
-          builder: (_, __) => const EmergencyScreen(),
+          builder: (context, state) => const EmergencyScreen(),
         ),
+
+        // ── Owner Dashboard ──
         GoRoute(
           path: '/owner',
-          builder: (_, __) => const OwnerDashboardScreen(),
+          builder: (context, state) => const OwnerDashboardScreen(),
         ),
+
+        // ── Offers ──
+        GoRoute(
+          path: '/offers',
+          builder: (context, state) => const OffersScreen(),
+
+          routes: [
+            GoRoute(
+              path: ':id',
+              builder: (context, state) {
+                final offerId = state.pathParameters['id']!;
+                return OfferDetailScreen(offerId: offerId);
+              },
+            ),
+          ],
+        ),
+
+        // ── Profile ──
         GoRoute(
           path: '/profile',
-          builder: (_, __) => const ProfileScreen(),
+          builder: (context, state) => const ProfileScreen(),
+        ),
+
+        // ── Business Detail ──
+        GoRoute(
+          path: '/business/:id',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return BusinessDetailScreen(businessId: id);
+          },
         ),
       ],
     ),

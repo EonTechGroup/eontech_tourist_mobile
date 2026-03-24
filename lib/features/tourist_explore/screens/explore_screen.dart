@@ -27,52 +27,70 @@ class ExploreScreen extends StatefulWidget {
 class _ExploreScreenState extends State<ExploreScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late AppProvider _provider; // ✅ FIXED
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+
+    /// ✅ SAFE provider access
+    _provider = context.read<AppProvider>();
+
     _tabController = TabController(length: 2, vsync: this);
 
-    _loadData();
-    _connectSocket();
+    _init();
+  }
 
-    Future.delayed(const Duration(milliseconds: 800), () {
-      if (mounted) setState(() => _isLoading = false);
-    });
+  Future<void> _init() async {
+    await _loadData();
+    await _connectSocket();
+
+    if (mounted) {
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) setState(() => _isLoading = false);
+      });
+    }
   }
 
   Future<void> _loadData() async {
-    final provider = context.read<AppProvider>();
-    await provider.fetchNearbyPlaces(refresh: false);
+    await _provider.fetchNearbyPlaces(refresh: false);
   }
 
   Future<void> _connectSocket() async {
     await SocketService().connect();
-    final provider = context.read<AppProvider>();
-    provider.listenToOffers();
+
+    _provider.listenToOffers();
 
     final pos = LocationService().lastPosition;
     if (pos != null) {
-      SocketService().subscribeOffers(lat: pos.latitude, lng: pos.longitude);
+      SocketService().subscribeOffers(
+        lat: pos.latitude,
+        lng: pos.longitude,
+      );
     }
   }
 
   Future<void> _onRefresh() async {
-    final provider = context.read<AppProvider>();
-    await provider.fetchNearbyPlaces(refresh: true);
+    await _provider.fetchNearbyPlaces(refresh: true);
 
     final pos = LocationService().lastPosition;
     if (pos != null) {
-      await provider.fetchNearbyOffers(lat: pos.latitude, lng: pos.longitude, refresh: true);
+      await _provider.fetchNearbyOffers(
+        lat: pos.latitude,
+        lng: pos.longitude,
+        refresh: true,
+      );
     }
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    final provider = context.read<AppProvider>();
-    provider.stopListeningOffers();
+
+    /// ✅ NO CONTEXT HERE
+    _provider.stopListeningOffers();
+
     super.dispose();
   }
 
@@ -88,14 +106,20 @@ class _ExploreScreenState extends State<ExploreScreen>
         child: Column(
           children: [
             _ExploreHeader(provider: provider),
+
+            /// Search
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: SearchBarWidget(onChanged: provider.setSearchQuery),
             ).animate().fadeIn(duration: 300.ms, delay: 100.ms),
+
+            /// Categories
             CategoryFilterBar(
               selected: provider.selectedCategory,
               onSelected: provider.setCategory,
             ).animate().fadeIn(duration: 300.ms, delay: 150.ms),
+
+            /// Tabs
             Container(
               margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               decoration: BoxDecoration(
@@ -121,12 +145,16 @@ class _ExploreScreenState extends State<ExploreScreen>
                 ],
               ),
             ).animate().fadeIn(duration: 300.ms, delay: 200.ms),
+
             const SizedBox(height: 8),
+
+            /// Content
             Expanded(
               child: TabBarView(
                 controller: _tabController,
                 children: [
                   ExploreMapView(places: places),
+
                   _isLoading
                       ? const _ShimmerList()
                       : RefreshIndicator(
@@ -150,11 +178,13 @@ class _ExploreScreenState extends State<ExploreScreen>
 
 class _ExploreHeader extends StatelessWidget {
   final AppProvider provider;
+
   const _ExploreHeader({required this.provider});
 
   @override
   Widget build(BuildContext context) {
     final firstName = provider.currentUser?.name.split(' ').first ?? '';
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 16, 4),
       child: Row(
@@ -196,7 +226,11 @@ class _ExploreHeader extends StatelessWidget {
 class _DistrictDropdown extends StatelessWidget {
   final String selected;
   final Function(String) onChanged;
-  const _DistrictDropdown({required this.selected, required this.onChanged});
+
+  const _DistrictDropdown({
+    required this.selected,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -226,6 +260,7 @@ class _PlaceList extends StatelessWidget {
   final List<Place> places;
   final List<Place> featured;
   final AppProvider provider;
+
   const _PlaceList({
     required this.places,
     required this.featured,
@@ -234,7 +269,9 @@ class _PlaceList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (places.isEmpty) return const Center(child: Text('No places found'));
+    if (places.isEmpty) {
+      return const Center(child: Text('No places found'));
+    }
 
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -259,7 +296,8 @@ class _PlaceList extends StatelessWidget {
                   animIndex: i,
                   isSaved: provider.isSaved(featured[i].id),
                   onSave: () => provider.toggleSave(featured[i].id),
-                  onTap: () => context.push('/explore/place/${featured[i].id}'),
+                  onTap: () =>
+                      context.push('/explore/place/${featured[i].id}'),
                 ),
               ),
             ),
@@ -274,7 +312,8 @@ class _PlaceList extends StatelessWidget {
                 animIndex: i,
                 isSaved: provider.isSaved(places[i].id),
                 onSave: () => provider.toggleSave(places[i].id),
-                onTap: () => context.push('/explore/place/${places[i].id}'),
+                onTap: () =>
+                    context.push('/explore/place/${places[i].id}'),
               ),
               childCount: places.length,
             ),
@@ -293,6 +332,7 @@ class _PlaceList extends StatelessWidget {
 
 class _ShimmerList extends StatelessWidget {
   const _ShimmerList({super.key});
+
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
