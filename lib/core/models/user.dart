@@ -1,41 +1,46 @@
-import 'package:json_annotation/json_annotation.dart';
+// lib/core/models/user.dart
 
-part 'user.g.dart';
-
+// ── UserRole enum ─────────────────────────────────────────────
+// Single source of truth — imported by both AppProvider and AuthNotifier.
+// DO NOT redefine UserRole in auth_provider.dart — import from here instead.
 enum UserRole { tourist, businessOwner }
 
-@JsonSerializable()
+// ── AppUser model ─────────────────────────────────────────────
 class AppUser {
   final String id;
-  final String email;
   final String name;
+  final String email;
   final UserRole role;
   final String? avatarUrl;
+  final String? nationality;
 
   const AppUser({
     required this.id,
-    required this.email,
     required this.name,
-    required this.role,
+    required this.email,
+    this.role = UserRole.tourist,
     this.avatarUrl,
+    this.nationality,
   });
 
-  factory AppUser.fromJson(Map<String, dynamic> json) =>
-      _$AppUserFromJson(json);
-
-  Map<String, dynamic> toJson() => _$AppUserToJson(this);
+  bool get isOwner => role == UserRole.businessOwner;
+  bool get isTourist => role == UserRole.tourist;
 
   AppUser copyWith({
+    String? id,
     String? name,
-    String? avatarUrl,
+    String? email,
     UserRole? role,
+    String? avatarUrl,
+    String? nationality,
   }) {
     return AppUser(
-      id: id,
+      id: id ?? this.id,
       name: name ?? this.name,
-      email: email,
+      email: email ?? this.email,
       role: role ?? this.role,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      nationality: nationality ?? this.nationality,
     );
   }
 }

@@ -685,9 +685,16 @@ class _AddStopSheet extends StatelessWidget {
             style: GoogleFonts.nunito(fontSize: 13, color: AppTheme.mutedText),
           ),
           const SizedBox(height: 20),
+
+          // ✅ FIXED BUTTON
           GestureDetector(
-            // rootNavigator: true matches useRootNavigator: true on the sheet
-            onTap: () => Navigator.of(context, rootNavigator: true).pop(),
+            onTap: () {
+              // Close bottom sheet
+              Navigator.of(context, rootNavigator: true).pop();
+
+              // Navigate to Explore tab
+              context.read<AppProvider>().setTab(1);
+            },
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 14),

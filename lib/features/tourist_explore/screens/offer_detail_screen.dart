@@ -284,7 +284,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                           color: AppTheme.oceanBlue,
                         ),
                         const Divider(height: 20),
-                        _DetailRow(
+                        const _DetailRow(
                           icon: Icons.people_outline,
                           label: 'Available For',
                           value: 'All visitors',

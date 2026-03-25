@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../../../core/models/user.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme.dart';
 import '../../../shared/providers/app_provider.dart';
@@ -26,16 +27,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _agreedToTerms = false;
   String _selectedNationality = 'Other';
 
+  // ── Role selection ──────────────────────────────────────────
+  UserRole _selectedRole = UserRole.tourist;
+
   static const List<String> _nationalities = [
-    'Sri Lankan',
-    'British',
-    'German',
-    'French',
-    'Australian',
-    'American',
-    'Indian',
-    'Chinese',
-    'Other',
+    'Sri Lankan', 'British', 'German', 'French',
+    'Australian', 'American', 'Indian', 'Chinese', 'Other',
   ];
 
   @override
@@ -46,8 +43,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  // ── Email register ──────────────────────────────────────────────────────
+  void _navigateAfterAuth(UserRole role) {
+    if (role == UserRole.businessOwner) {
+      context.go('/owner');
+    } else {
+      context.go('/explore');
+    }
+  }
 
+  // ── Email register ──────────────────────────────────────────
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
     if (!_agreedToTerms) {
@@ -57,11 +61,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
     setState(() => _isLoading = true);
 
+    // ✅ Pass selected role to AuthNotifier
     final error = await context.read<AuthNotifier>().register(
           name: _nameController.text.trim(),
           email: _emailController.text.trim(),
           password: _passwordController.text,
           nationality: _selectedNationality,
+          role: _selectedRole,
         );
 
     if (!mounted) return;
@@ -69,18 +75,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (error == null) {
       final auth = context.read<AuthNotifier>();
+      // ✅ Pass selected role to AppProvider so nav bar updates
       context.read<AppProvider>().login(
             auth.userEmail ?? _emailController.text.trim(),
             auth.userName ?? _nameController.text.trim(),
+            role: _selectedRole,
           );
-      context.go('/explore');
+      _navigateAfterAuth(_selectedRole);
     } else {
       _showError(error);
     }
   }
 
-  // ── Google Sign-In ──────────────────────────────────────────────────────
-
+  // ── Google Sign-In ──────────────────────────────────────────
   Future<void> _googleSignIn() async {
     setState(() => _isGoogleLoading = true);
 
@@ -91,11 +98,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (error == null) {
       final auth = context.read<AuthNotifier>();
+      final role = auth.userRole ?? _selectedRole;
       context.read<AppProvider>().login(
             auth.userEmail ?? '',
             auth.userName ?? '',
+            role: role,
           );
-      context.go('/explore');
+      _navigateAfterAuth(role);
     } else {
       _showError(error);
     }
@@ -109,21 +118,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Icon(icon, color: Colors.white, size: 18),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                message,
-                style: GoogleFonts.nunito(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
+              child: Text(message,
+                  style: GoogleFonts.nunito(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white)),
             ),
           ],
         ),
         backgroundColor: AppTheme.coralRed,
         behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
         duration: const Duration(seconds: 3),
       ),
@@ -145,17 +150,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(
-                      bottom: Radius.circular(36),
-                    ),
-                    child: Image.asset(
-                      'assets/images/reg_bg.jpg',
-                      fit: BoxFit.cover,
-                    ),
+                        bottom: Radius.circular(36)),
+                    child: Image.asset('assets/images/reg_bg.jpg',
+                        fit: BoxFit.cover),
                   ),
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(
-                      bottom: Radius.circular(36),
-                    ),
+                        bottom: Radius.circular(36)),
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -183,10 +184,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
                           ),
-                        )
-                            .animate()
-                            .fadeIn(duration: 400.ms)
-                            .slideY(begin: 0.2),
+                        ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.2),
                         const SizedBox(height: 4),
                         Text(
                           'Join thousands exploring South Sri Lanka',
@@ -213,13 +211,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const _StepIndicator().animate().fadeIn(
-                          duration: 400.ms,
-                          delay: 100.ms,
-                        ),
-
+                    const _StepIndicator()
+                        .animate()
+                        .fadeIn(duration: 400.ms, delay: 100.ms),
                     const SizedBox(height: 20),
 
+                    // ── Role Selector ──────────────────────────
+                    _RoleSelector(
+                      selectedRole: _selectedRole,
+                      onChanged: (role) =>
+                          setState(() => _selectedRole = role),
+                    ).animate().fadeIn(duration: 400.ms, delay: 130.ms),
+                    const SizedBox(height: 16),
+
+                    // ── Personal details card ──────────────────
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -241,21 +246,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             label: 'Personal Details',
                           ),
                           const SizedBox(height: 14),
-
                           CustomTextField(
                             label: 'Full Name',
                             hint: 'John Doe',
                             controller: _nameController,
                             prefixIcon: Icons.person_outline,
-                            validator: (v) {
-                              if (v == null || v.isEmpty)
-                                return 'Enter your name';
-                              return null;
-                            },
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? 'Enter your name'
+                                : null,
                           ).animate().fadeIn(duration: 400.ms, delay: 150.ms),
-
                           const SizedBox(height: 14),
-
                           CustomTextField(
                             label: 'Email Address',
                             hint: 'you@example.com',
@@ -263,16 +263,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             keyboardType: TextInputType.emailAddress,
                             prefixIcon: Icons.email_outlined,
                             validator: (v) {
-                              if (v == null || v.isEmpty)
-                                return 'Enter your email';
-                              if (!v.contains('@'))
-                                return 'Enter a valid email';
+                              if (v == null || v.isEmpty) return 'Enter your email';
+                              if (!v.contains('@')) return 'Enter a valid email';
                               return null;
                             },
                           ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
-
                           const SizedBox(height: 14),
-
                           CustomTextField(
                             label: 'Password',
                             hint: '••••••••',
@@ -280,26 +276,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             isPassword: true,
                             prefixIcon: Icons.lock_outline,
                             validator: (v) {
-                              if (v == null || v.isEmpty)
-                                return 'Enter a password';
+                              if (v == null || v.isEmpty) return 'Enter a password';
                               if (v.length < 6) return 'Min 6 characters';
                               return null;
                             },
                           ).animate().fadeIn(duration: 400.ms, delay: 250.ms),
-
                           const SizedBox(height: 14),
-
                           _NationalityDropdown(
                             selected: _selectedNationality,
                             nationalities: _nationalities,
                             onChanged: (v) => setState(
-                              () => _selectedNationality = v ?? 'Other',
-                            ),
+                                () => _selectedNationality = v ?? 'Other'),
                           ).animate().fadeIn(duration: 400.ms, delay: 300.ms),
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 16),
 
                     _TermsCheckbox(
@@ -307,67 +298,56 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onChanged: (v) =>
                           setState(() => _agreedToTerms = v ?? false),
                     ).animate().fadeIn(duration: 400.ms, delay: 340.ms),
-
                     const SizedBox(height: 20),
 
                     CustomButton(
-                      label: 'Create Account',
+                      label: _selectedRole == UserRole.businessOwner
+                          ? 'Create Owner Account'
+                          : 'Create Account',
                       onPressed: _register,
                       isLoading: _isLoading,
-                      icon: Icons.person_add_outlined,
+                      icon: _selectedRole == UserRole.businessOwner
+                          ? Icons.store_outlined
+                          : Icons.person_add_outlined,
                     ).animate().fadeIn(duration: 400.ms, delay: 380.ms),
-
                     const SizedBox(height: 20),
 
                     Row(
                       children: [
                         const Expanded(child: Divider(thickness: 1)),
                         Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 14),
-                          child: Text(
-                            'or sign up with',
-                            style: GoogleFonts.nunito(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.mutedText,
-                            ),
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          child: Text('or sign up with',
+                              style: GoogleFonts.nunito(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.mutedText)),
                         ),
                         const Expanded(child: Divider(thickness: 1)),
                       ],
                     ).animate().fadeIn(duration: 400.ms, delay: 410.ms),
-
                     const SizedBox(height: 16),
 
                     _GoogleButton(
                       isLoading: _isGoogleLoading,
                       onTap: _googleSignIn,
                     ).animate().fadeIn(duration: 400.ms, delay: 440.ms),
-
                     const SizedBox(height: 28),
 
                     Center(
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            'Already have an account? ',
-                            style: GoogleFonts.nunito(
-                              fontSize: 14,
-                              color: AppTheme.mutedText,
-                            ),
-                          ),
+                          Text('Already have an account? ',
+                              style: GoogleFonts.nunito(
+                                  fontSize: 14, color: AppTheme.mutedText)),
                           GestureDetector(
                             onTap: () => context.pop(),
-                            child: Text(
-                              'Sign In',
-                              style: GoogleFonts.nunito(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.oceanBlue,
-                              ),
-                            ),
+                            child: Text('Sign In',
+                                style: GoogleFonts.nunito(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.oceanBlue)),
                           ),
                         ],
                       ),
@@ -383,11 +363,199 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 }
 
+// ── Role Selector ─────────────────────────────────────────────
+
+class _RoleSelector extends StatelessWidget {
+  final UserRole selectedRole;
+  final void Function(UserRole) onChanged;
+
+  const _RoleSelector({required this.selectedRole, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final isOwner = selectedRole == UserRole.businessOwner;
+    final accentColor = isOwner ? AppTheme.sunsetOrange : AppTheme.oceanBlue;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 2, bottom: 10),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppTheme.oceanBlue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.badge_outlined,
+                    size: 16, color: AppTheme.oceanBlue),
+              ),
+              const SizedBox(width: 10),
+              Text('I am joining as a...',
+                  style: GoogleFonts.nunito(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.darkInk)),
+            ],
+          ),
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: _RoleCard(
+                icon: Icons.explore_outlined,
+                title: 'Traveler',
+                subtitle: 'Explore places, deals & experiences',
+                accentColor: AppTheme.oceanBlue,
+                isSelected: selectedRole == UserRole.tourist,
+                onTap: () => onChanged(UserRole.tourist),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _RoleCard(
+                icon: Icons.store_outlined,
+                title: 'Business Owner',
+                subtitle: 'List your business & post flash offers',
+                accentColor: AppTheme.sunsetOrange,
+                isSelected: selectedRole == UserRole.businessOwner,
+                onTap: () => onChanged(UserRole.businessOwner),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          child: Container(
+            key: ValueKey(selectedRole),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: accentColor.withValues(alpha: 0.07),
+              borderRadius: BorderRadius.circular(10),
+              border:
+                  Border.all(color: accentColor.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, size: 14, color: accentColor),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    isOwner
+                        ? 'You\'ll manage listings, post flash offers & reach tourists near you.'
+                        : 'You\'ll explore destinations, save favorites & receive flash deals nearby.',
+                    style: GoogleFonts.nunito(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: accentColor),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RoleCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color accentColor;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _RoleCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.accentColor,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color:
+              isSelected ? accentColor.withValues(alpha: 0.06) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: isSelected ? accentColor : AppTheme.borderColor,
+              width: isSelected ? 2 : 1),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2))
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? accentColor.withValues(alpha: 0.15)
+                        : AppTheme.softGrey,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon,
+                      size: 18,
+                      color: isSelected ? accentColor : AppTheme.mutedText),
+                ),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: isSelected ? accentColor : Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: isSelected ? accentColor : AppTheme.borderColor,
+                        width: 2),
+                  ),
+                  child: isSelected
+                      ? const Icon(Icons.check, size: 12, color: Colors.white)
+                      : null,
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(title,
+                style: GoogleFonts.nunito(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: isSelected ? accentColor : AppTheme.darkInk)),
+            const SizedBox(height: 3),
+            Text(subtitle,
+                style: GoogleFonts.nunito(
+                    fontSize: 10, color: AppTheme.mutedText, height: 1.4)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ── Step Indicator ────────────────────────────────────────────
 
 class _StepIndicator extends StatelessWidget {
   const _StepIndicator();
-
   @override
   Widget build(BuildContext context) {
     return const Row(
@@ -407,14 +575,11 @@ class _Step extends StatelessWidget {
   final String label;
   final bool isActive;
   final bool isDone;
-
-  const _Step({
-    required this.number,
-    required this.label,
-    required this.isActive,
-    required this.isDone,
-  });
-
+  const _Step(
+      {required this.number,
+      required this.label,
+      required this.isActive,
+      required this.isDone});
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -441,25 +606,20 @@ class _Step extends StatelessWidget {
           child: Center(
             child: isDone
                 ? const Icon(Icons.check, size: 16, color: Colors.white)
-                : Text(
-                    number,
+                : Text(number,
                     style: GoogleFonts.nunito(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: isActive ? Colors.white : AppTheme.mutedText,
-                    ),
-                  ),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color:
+                            isActive ? Colors.white : AppTheme.mutedText)),
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          label,
-          style: GoogleFonts.nunito(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: isActive ? AppTheme.oceanBlue : AppTheme.mutedText,
-          ),
-        ),
+        Text(label,
+            style: GoogleFonts.nunito(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: isActive ? AppTheme.oceanBlue : AppTheme.mutedText)),
       ],
     );
   }
@@ -468,7 +628,6 @@ class _Step extends StatelessWidget {
 class _StepLine extends StatelessWidget {
   final bool isActive;
   const _StepLine({required this.isActive});
-
   @override
   Widget build(BuildContext context) {
     return Expanded(
@@ -487,9 +646,7 @@ class _StepLine extends StatelessWidget {
 class _SectionLabel extends StatelessWidget {
   final IconData icon;
   final String label;
-
   const _SectionLabel({required this.icon, required this.label});
-
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -503,14 +660,11 @@ class _SectionLabel extends StatelessWidget {
           child: Icon(icon, size: 16, color: AppTheme.oceanBlue),
         ),
         const SizedBox(width: 10),
-        Text(
-          label,
-          style: GoogleFonts.nunito(
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.darkInk,
-          ),
-        ),
+        Text(label,
+            style: GoogleFonts.nunito(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.darkInk)),
       ],
     );
   }
@@ -520,26 +674,20 @@ class _NationalityDropdown extends StatelessWidget {
   final String selected;
   final List<String> nationalities;
   final void Function(String?) onChanged;
-
-  const _NationalityDropdown({
-    required this.selected,
-    required this.nationalities,
-    required this.onChanged,
-  });
-
+  const _NationalityDropdown(
+      {required this.selected,
+      required this.nationalities,
+      required this.onChanged});
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Nationality',
-          style: GoogleFonts.nunito(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF374151),
-          ),
-        ),
+        Text('Nationality',
+            style: GoogleFonts.nunito(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF374151))),
         const SizedBox(height: 6),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -564,11 +712,10 @@ class _NationalityDropdown extends StatelessWidget {
                       GoogleFonts.nunito(fontSize: 14, color: AppTheme.darkInk),
                   items: nationalities
                       .map((n) => DropdownMenuItem(
-                            value: n,
-                            child: Text(n,
-                                style: GoogleFonts.nunito(
-                                    fontSize: 14, color: AppTheme.darkInk)),
-                          ))
+                          value: n,
+                          child: Text(n,
+                              style: GoogleFonts.nunito(
+                                  fontSize: 14, color: AppTheme.darkInk))))
                       .toList(),
                   onChanged: onChanged,
                 ),
@@ -584,9 +731,7 @@ class _NationalityDropdown extends StatelessWidget {
 class _TermsCheckbox extends StatelessWidget {
   final bool value;
   final void Function(bool?) onChanged;
-
   const _TermsCheckbox({required this.value, required this.onChanged});
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -597,9 +742,8 @@ class _TermsCheckbox extends StatelessWidget {
           color:
               value ? AppTheme.oceanBlue.withValues(alpha: 0.05) : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: value ? AppTheme.oceanBlue : AppTheme.borderColor,
-          ),
+          border:
+              Border.all(color: value ? AppTheme.oceanBlue : AppTheme.borderColor),
         ),
         child: Row(
           children: [
@@ -611,9 +755,8 @@ class _TermsCheckbox extends StatelessWidget {
                 color: value ? AppTheme.oceanBlue : Colors.white,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: value ? AppTheme.oceanBlue : AppTheme.borderColor,
-                  width: 2,
-                ),
+                    color: value ? AppTheme.oceanBlue : AppTheme.borderColor,
+                    width: 2),
               ),
               child: value
                   ? const Icon(Icons.check, size: 14, color: Colors.white)
@@ -623,27 +766,23 @@ class _TermsCheckbox extends StatelessWidget {
             Expanded(
               child: RichText(
                 text: TextSpan(
-                  style:
-                      GoogleFonts.nunito(fontSize: 12, color: AppTheme.mutedText),
+                  style: GoogleFonts.nunito(
+                      fontSize: 12, color: AppTheme.mutedText),
                   children: [
                     const TextSpan(text: 'I agree to the '),
                     TextSpan(
-                      text: 'Terms of Service',
-                      style: GoogleFonts.nunito(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.oceanBlue,
-                      ),
-                    ),
+                        text: 'Terms of Service',
+                        style: GoogleFonts.nunito(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.oceanBlue)),
                     const TextSpan(text: ' and '),
                     TextSpan(
-                      text: 'Privacy Policy',
-                      style: GoogleFonts.nunito(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.oceanBlue,
-                      ),
-                    ),
+                        text: 'Privacy Policy',
+                        style: GoogleFonts.nunito(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.oceanBlue)),
                   ],
                 ),
               ),
@@ -658,9 +797,7 @@ class _TermsCheckbox extends StatelessWidget {
 class _GoogleButton extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onTap;
-
   const _GoogleButton({required this.isLoading, required this.onTap});
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -675,10 +812,9 @@ class _GoogleButton extends StatelessWidget {
           border: Border.all(color: AppTheme.borderColor, width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2))
           ],
         ),
         child: isLoading
@@ -689,9 +825,7 @@ class _GoogleButton extends StatelessWidget {
                     width: 22,
                     height: 22,
                     child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppTheme.mutedText,
-                    ),
+                        strokeWidth: 2, color: AppTheme.mutedText),
                   ),
                 ),
               )
@@ -707,10 +841,9 @@ class _GoogleButton extends StatelessWidget {
                     ),
                     child: Center(
                       child: SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CustomPaint(painter: _GoogleLogoPainter()),
-                      ),
+                          width: 22,
+                          height: 22,
+                          child: CustomPaint(painter: _GoogleLogoPainter())),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -718,30 +851,22 @@ class _GoogleButton extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Continue with Google',
-                          style: GoogleFonts.nunito(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.darkInk,
-                          ),
-                        ),
-                        Text(
-                          'Fast & secure sign up',
-                          style: GoogleFonts.nunito(
-                            fontSize: 11,
-                            color: AppTheme.mutedText,
-                          ),
-                        ),
+                        Text('Continue with Google',
+                            style: GoogleFonts.nunito(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.darkInk)),
+                        Text('Fast & secure sign up',
+                            style: GoogleFonts.nunito(
+                                fontSize: 11, color: AppTheme.mutedText)),
                       ],
                     ),
                   ),
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: AppTheme.softGrey,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                        color: AppTheme.softGrey,
+                        borderRadius: BorderRadius.circular(8)),
                     child: const Icon(Icons.arrow_forward_ios,
                         size: 12, color: AppTheme.mutedText),
                   ),
@@ -757,14 +882,12 @@ class _GoogleLogoPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
-
     const segments = [
       [270.0, 90.0, Color(0xFF4285F4)],
       [180.0, 90.0, Color(0xFFEA4335)],
       [135.0, 45.0, Color(0xFFFBBC05)],
       [90.0, 45.0, Color(0xFF34A853)],
     ];
-
     for (final seg in segments) {
       final paint = Paint()
         ..color = seg[2] as Color
@@ -778,16 +901,12 @@ class _GoogleLogoPainter extends CustomPainter {
         paint,
       );
     }
-
     final barPaint = Paint()
       ..color = const Color(0xFF4285F4)
       ..strokeWidth = size.width * 0.18
       ..strokeCap = StrokeCap.round;
-    canvas.drawLine(
-      Offset(center.dx, center.dy),
-      Offset(center.dx + radius * 0.72, center.dy),
-      barPaint,
-    );
+    canvas.drawLine(Offset(center.dx, center.dy),
+        Offset(center.dx + radius * 0.72, center.dy), barPaint);
   }
 
   @override

@@ -31,7 +31,7 @@ class _ExploreMapViewState extends State<ExploreMapView> {
         FlutterMap(
           mapController: _mapController,
           options: MapOptions(
-            initialCenter: LatLng(
+            initialCenter: const LatLng(
               AppConstants.defaultLat,
               AppConstants.defaultLng,
             ),

@@ -16,7 +16,7 @@ class OwnerDashboardScreen extends StatelessWidget {
     final offers = MockData.offers;
 
     return Scaffold(
-      backgroundColor: AppTheme.softGrey,
+      backgroundColor: const Color.fromARGB(255, 96, 148, 200),
       body: CustomScrollView(
         slivers: [
           // ── Header ──────────────────────────────────
@@ -236,7 +236,7 @@ class OwnerDashboardScreen extends StatelessWidget {
           ),
 
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+  padding: EdgeInsets.fromLTRB(20, 0, 20, 40 + MediaQuery.of(context).padding.bottom + kBottomNavigationBarHeight),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {

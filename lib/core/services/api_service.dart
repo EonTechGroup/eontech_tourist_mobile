@@ -87,7 +87,7 @@ class ApiService {
     required String name,
     required String email,
     required String password,
-    required String nationality,
+    required String nationality, required String role,
   }) async {
     await Future.delayed(const Duration(milliseconds: 500));
     try {

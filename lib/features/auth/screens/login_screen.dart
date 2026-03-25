@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../../../core/models/user.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme.dart';
 import '../../../shared/providers/app_provider.dart';
@@ -30,7 +31,15 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // ── Email login ─────────────────────────────────────────────────────────
+  void _navigateAfterAuth(UserRole role) {
+    if (role == UserRole.businessOwner) {
+      context.go('/owner');
+    } else {
+      context.go('/explore');
+    }
+  }
+
+  // ── Email login ───────────────────────────────────────────────────────────
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
@@ -46,17 +55,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (error == null) {
       final auth = context.read<AuthNotifier>();
+      // ✅ Read role set by backend response in AuthNotifier
+      final role = auth.userRole ?? UserRole.tourist;
       context.read<AppProvider>().login(
             auth.userEmail ?? _emailController.text.trim(),
             auth.userName ?? _emailController.text.split('@').first,
+            role: role,
           );
-      context.go('/explore');
+      _navigateAfterAuth(role);
     } else {
       _showError(error);
     }
   }
 
-  // ── Google Sign-In ──────────────────────────────────────────────────────
+  // ── Google Sign-In ────────────────────────────────────────────────────────
 
   Future<void> _googleSignIn() async {
     setState(() => _isGoogleLoading = true);
@@ -68,46 +80,39 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (error == null) {
       final auth = context.read<AuthNotifier>();
+      final role = auth.userRole ?? UserRole.tourist;
       context.read<AppProvider>().login(
             auth.userEmail ?? '',
             auth.userName ?? '',
+            role: role,
           );
-      context.go('/explore');
+      _navigateAfterAuth(role);
     } else {
       _showError(error);
     }
   }
 
-  // ── Forgot password ─────────────────────────────────────────────────────
+  // ── Forgot password ───────────────────────────────────────────────────────
 
   void _forgotPassword() {
-    final emailCtrl = TextEditingController(
-      text: _emailController.text.trim(),
-    );
+    final emailCtrl =
+        TextEditingController(text: _emailController.text.trim());
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Text(
-          'Reset Password',
-          style: GoogleFonts.playfairDisplay(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: AppTheme.darkInk,
-          ),
-        ),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Reset Password',
+            style: GoogleFonts.playfairDisplay(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.darkInk)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Enter your email and we\'ll send a reset link.',
-              style: GoogleFonts.nunito(
-                fontSize: 13,
-                color: AppTheme.mutedText,
-              ),
-            ),
+            Text('Enter your email and we\'ll send a reset link.',
+                style: GoogleFonts.nunito(
+                    fontSize: 13, color: AppTheme.mutedText)),
             const SizedBox(height: 16),
             TextField(
               controller: emailCtrl,
@@ -115,25 +120,24 @@ class _LoginScreenState extends State<LoginScreen> {
               style: GoogleFonts.nunito(fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'you@example.com',
-                hintStyle:
-                    GoogleFonts.nunito(color: AppTheme.mutedText, fontSize: 14),
+                hintStyle: GoogleFonts.nunito(
+                    color: AppTheme.mutedText, fontSize: 14),
                 prefixIcon: const Icon(Icons.email_outlined,
                     size: 18, color: AppTheme.mutedText),
                 filled: true,
                 fillColor: AppTheme.softGrey,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppTheme.borderColor),
-                ),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        const BorderSide(color: AppTheme.borderColor)),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppTheme.borderColor),
-                ),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        const BorderSide(color: AppTheme.borderColor)),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      const BorderSide(color: AppTheme.oceanBlue, width: 2),
-                ),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                        color: AppTheme.oceanBlue, width: 2)),
                 contentPadding: const EdgeInsets.symmetric(
                     horizontal: 14, vertical: 12),
               ),
@@ -143,47 +147,40 @@ class _LoginScreenState extends State<LoginScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.nunito(color: AppTheme.mutedText),
-            ),
+            child: Text('Cancel',
+                style: GoogleFonts.nunito(color: AppTheme.mutedText)),
           ),
           ElevatedButton(
             onPressed: () async {
               final email = emailCtrl.text.trim();
               if (email.isEmpty) return;
               Navigator.pop(ctx);
-              // Use Firebase directly for password reset
-              from_auth_service:
-              try {
-                from_auth_service2:
-                await context
-                    .read<AuthNotifier>()
-                    .checkAuthStatus(); // just to keep reference
-              } catch (_) {}
-              _showSnackBar(
-                'Reset link sent to $email',
-                AppTheme.forestGreen,
-              );
+              final error = await context
+                  .read<AuthNotifier>()
+                  .sendPasswordReset(email);
+              if (!mounted) return;
+              if (error == null) {
+                _showSnackBar(
+                    'Reset link sent to $email', AppTheme.forestGreen);
+              } else {
+                _showError(error);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.oceanBlue,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+                  borderRadius: BorderRadius.circular(10)),
             ),
-            child: Text(
-              'Send Link',
-              style: GoogleFonts.nunito(
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
+            child: Text('Send Link',
+                style: GoogleFonts.nunito(
+                    fontWeight: FontWeight.w700, color: Colors.white)),
           ),
         ],
       ),
     );
   }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
 
   void _showError(String message) {
     _showSnackBar(message, AppTheme.coralRed, icon: Icons.error_outline);
@@ -198,22 +195,18 @@ class _LoginScreenState extends State<LoginScreen> {
             Icon(icon, color: Colors.white, size: 18),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                message,
-                style: GoogleFonts.nunito(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
+              child: Text(message,
+                  style: GoogleFonts.nunito(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white)),
             ),
           ],
         ),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
         duration: const Duration(seconds: 3),
       ),
@@ -226,7 +219,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // ── Background image top half ───────────────────
+          // ── Background image top half ─────────────────────
           Positioned(
             top: 0,
             left: 0,
@@ -235,7 +228,8 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                Image.asset('assets/images/login_bg.jpg', fit: BoxFit.cover),
+                Image.asset('assets/images/login_bg.jpg',
+                    fit: BoxFit.cover),
                 DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -254,23 +248,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'South Sri Lanka',
-                        style: GoogleFonts.playfairDisplay(
-                          fontSize: 40,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                      ),
+                      Text('South Sri Lanka',
+                          style: GoogleFonts.playfairDisplay(
+                              fontSize: 40,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white)),
                       const SizedBox(height: 10),
-                      Text(
-                        'Your travel companion',
-                        style: GoogleFonts.nunito(
-                          fontSize: 16,
-                          color: Colors.white70,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      Text('Your travel companion',
+                          style: GoogleFonts.nunito(
+                              fontSize: 16,
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w600)),
                       const SizedBox(height: 60),
                     ],
                   ),
@@ -279,7 +267,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          // ── Form card ───────────────────────────────────
+          // ── Form card ──────────────────────────────────────
           Positioned(
             top: MediaQuery.of(context).size.height * 0.32,
             left: 0,
@@ -288,9 +276,8 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Container(
               decoration: const BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(28),
-                ),
+                borderRadius:
+                    BorderRadius.vertical(top: Radius.circular(28)),
               ),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(28, 32, 28, 24),
@@ -299,25 +286,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Welcome Back',
-                        style: GoogleFonts.playfairDisplay(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.darkInk,
-                        ),
-                      ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.2),
-
-                      Text(
-                        'Sign in to continue your journey',
-                        style: GoogleFonts.nunito(
-                          fontSize: 14,
-                          color: AppTheme.mutedText,
-                        ),
-                      ).animate().fadeIn(duration: 400.ms, delay: 80.ms),
-
+                      Text('Welcome Back',
+                          style: GoogleFonts.playfairDisplay(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.darkInk))
+                          .animate()
+                          .fadeIn(duration: 400.ms)
+                          .slideY(begin: 0.2),
+                      Text('Sign in to continue your journey',
+                          style: GoogleFonts.nunito(
+                              fontSize: 14, color: AppTheme.mutedText))
+                          .animate()
+                          .fadeIn(duration: 400.ms, delay: 80.ms),
                       const SizedBox(height: 28),
-
                       CustomTextField(
                         label: 'Email Address',
                         hint: 'you@example.com',
@@ -330,9 +312,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           return null;
                         },
                       ).animate().fadeIn(duration: 400.ms, delay: 160.ms),
-
                       const SizedBox(height: 16),
-
                       CustomTextField(
                         label: 'Password',
                         hint: '••••••••',
@@ -345,36 +325,27 @@ class _LoginScreenState extends State<LoginScreen> {
                           return null;
                         },
                       ).animate().fadeIn(duration: 400.ms, delay: 240.ms),
-
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: _forgotPassword,
-                          child: Text(
-                            'Forgot Password?',
-                            style: GoogleFonts.nunito(
-                              color: AppTheme.oceanBlue,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                          ),
+                          child: Text('Forgot Password?',
+                              style: GoogleFonts.nunito(
+                                  color: AppTheme.oceanBlue,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13)),
                         ),
                       ).animate().fadeIn(duration: 400.ms, delay: 300.ms),
-
                       CustomButton(
                         label: 'Sign In',
                         onPressed: _login,
                         isLoading: _isLoading,
                       ).animate().fadeIn(duration: 400.ms, delay: 340.ms),
-
                       const SizedBox(height: 24),
-
                       const _OrDivider(label: 'or sign in with')
                           .animate()
                           .fadeIn(duration: 400.ms, delay: 380.ms),
-
                       const SizedBox(height: 20),
-
                       _SocialButton(
                         onTap: _googleSignIn,
                         isLoading: _isGoogleLoading,
@@ -384,11 +355,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderColor: AppTheme.borderColor,
                         textColor: AppTheme.darkInk,
                       ).animate().fadeIn(duration: 400.ms, delay: 420.ms),
-
                       const SizedBox(height: 12),
-
+                      // ✅ Guest always goes to explore as tourist
                       _SocialButton(
-                        onTap: () => context.go('/explore'),
+                        onTap: () {
+                          context.read<AppProvider>().login(
+                                'guest@southsrilanka.com',
+                                'Guest',
+                                role: UserRole.tourist,
+                              );
+                          context.go('/explore');
+                        },
                         icon: Container(
                           width: 22,
                           height: 22,
@@ -404,30 +381,22 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderColor: AppTheme.borderColor,
                         textColor: AppTheme.mutedText,
                       ).animate().fadeIn(duration: 400.ms, delay: 450.ms),
-
                       const SizedBox(height: 28),
-
                       Center(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              "Don't have an account? ",
-                              style: GoogleFonts.nunito(
-                                fontSize: 14,
-                                color: AppTheme.mutedText,
-                              ),
-                            ),
+                            Text("Don't have an account? ",
+                                style: GoogleFonts.nunito(
+                                    fontSize: 14,
+                                    color: AppTheme.mutedText)),
                             GestureDetector(
                               onTap: () => context.push('/register'),
-                              child: Text(
-                                'Sign Up',
-                                style: GoogleFonts.nunito(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppTheme.oceanBlue,
-                                ),
-                              ),
+                              child: Text('Sign Up',
+                                  style: GoogleFonts.nunito(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppTheme.oceanBlue)),
                             ),
                           ],
                         ),
@@ -444,12 +413,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-// ── Or Divider ────────────────────────────────────────────────
+// ── Or Divider ────────────────────────────────────────────────────────────────
 
 class _OrDivider extends StatelessWidget {
   final String label;
   const _OrDivider({required this.label});
-
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -457,14 +425,11 @@ class _OrDivider extends StatelessWidget {
         const Expanded(child: Divider(thickness: 1)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14),
-          child: Text(
-            label,
-            style: GoogleFonts.nunito(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.mutedText,
-            ),
-          ),
+          child: Text(label,
+              style: GoogleFonts.nunito(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.mutedText)),
         ),
         const Expanded(child: Divider(thickness: 1)),
       ],
@@ -472,7 +437,7 @@ class _OrDivider extends StatelessWidget {
   }
 }
 
-// ── Social Button ─────────────────────────────────────────────
+// ── Social Button ─────────────────────────────────────────────────────────────
 
 class _SocialButton extends StatelessWidget {
   final VoidCallback onTap;
@@ -507,10 +472,9 @@ class _SocialButton extends StatelessWidget {
           border: Border.all(color: borderColor, width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 6,
+                offset: const Offset(0, 2))
           ],
         ),
         child: isLoading
@@ -521,9 +485,7 @@ class _SocialButton extends StatelessWidget {
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppTheme.mutedText,
-                    ),
+                        strokeWidth: 2, color: AppTheme.mutedText),
                   ),
                 ),
               )
@@ -532,14 +494,11 @@ class _SocialButton extends StatelessWidget {
                 children: [
                   icon,
                   const SizedBox(width: 10),
-                  Text(
-                    label,
-                    style: GoogleFonts.nunito(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: textColor,
-                    ),
-                  ),
+                  Text(label,
+                      style: GoogleFonts.nunito(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: textColor)),
                 ],
               ),
       ),
@@ -547,18 +506,16 @@ class _SocialButton extends StatelessWidget {
   }
 }
 
-// ── Google Logo ───────────────────────────────────────────────
+// ── Google Logo ───────────────────────────────────────────────────────────────
 
 class _GoogleLogo extends StatelessWidget {
   const _GoogleLogo();
-
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 22,
-      height: 22,
-      child: CustomPaint(painter: _GoogleLogoPainter()),
-    );
+        width: 22,
+        height: 22,
+        child: CustomPaint(painter: _GoogleLogoPainter()));
   }
 }
 
@@ -567,14 +524,12 @@ class _GoogleLogoPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
-
     const segments = [
       [270.0, 90.0, Color(0xFF4285F4)],
       [180.0, 90.0, Color(0xFFEA4335)],
       [135.0, 45.0, Color(0xFFFBBC05)],
       [90.0, 45.0, Color(0xFF34A853)],
     ];
-
     for (final seg in segments) {
       final paint = Paint()
         ..color = seg[2] as Color
@@ -588,16 +543,12 @@ class _GoogleLogoPainter extends CustomPainter {
         paint,
       );
     }
-
     final barPaint = Paint()
       ..color = const Color(0xFF4285F4)
       ..strokeWidth = size.width * 0.18
       ..strokeCap = StrokeCap.round;
-    canvas.drawLine(
-      Offset(center.dx, center.dy),
-      Offset(center.dx + radius * 0.72, center.dy),
-      barPaint,
-    );
+    canvas.drawLine(Offset(center.dx, center.dy),
+        Offset(center.dx + radius * 0.72, center.dy), barPaint);
   }
 
   @override

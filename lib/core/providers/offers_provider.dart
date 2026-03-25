@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import '../models/offer.dart';
 import '../services/api_service.dart';
 import '../services/socket_service.dart';
-import '../services/location_service.dart';
 import '../utils/mock_data.dart';
 
 class OffersProvider extends ChangeNotifier {
@@ -40,11 +39,9 @@ class OffersProvider extends ChangeNotifier {
   // Listen to socket updates
   void listenToSocketEvents() {
     SocketService().onOfferUpdate((data) {
-      if (data != null) {
-        _offers = (data as List<dynamic>).map((o) => _parseOffer(o)).toList();
-        notifyListeners();
-      }
-    });
+      _offers = (data as List<dynamic>).map((o) => _parseOffer(o)).toList();
+      notifyListeners();
+        });
   }
 
   void stopListening() {

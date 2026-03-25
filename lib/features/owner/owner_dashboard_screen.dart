@@ -1,3 +1,5 @@
+import 'package:eontech_tourist_mobile/features/owner/screens/analytics_screen.dart';
+import 'package:eontech_tourist_mobile/features/owner/screens/reviews_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,7 +7,6 @@ import 'package:provider/provider.dart';
 import '../../../core/theme.dart';
 import '../../../core/utils/mock_data.dart';
 import '../../../shared/providers/app_provider.dart';
-
 class OwnerDashboardScreen extends StatelessWidget {
   const OwnerDashboardScreen({super.key});
 
@@ -16,7 +17,7 @@ class OwnerDashboardScreen extends StatelessWidget {
     final offers = MockData.offers;
 
     return Scaffold(
-      backgroundColor: AppTheme.softGrey,
+      backgroundColor: const Color.fromARGB(255, 96, 148, 200),
       body: CustomScrollView(
         slivers: [
           // ── Header ──────────────────────────────────
@@ -59,8 +60,7 @@ class OwnerDashboardScreen extends StatelessWidget {
                                   'Welcome back, ${provider.currentUser?.name ?? 'Owner'}',
                                   style: GoogleFonts.nunito(
                                     fontSize: 13,
-                                    color:
-                                        Colors.white.withValues(alpha: 0.8),
+                                    color: Colors.white.withValues(alpha: 0.8),
                                   ),
                                 ),
                               ],
@@ -183,7 +183,15 @@ class OwnerDashboardScreen extends StatelessWidget {
                           icon: Icons.analytics_outlined,
                           label: 'Analytics',
                           color: AppTheme.forestGreen,
-                          onTap: () {},
+                          // ── FIXED: now navigates to AnalyticsScreen ──
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AnalyticsScreen(
+                                businessName: 'My Business',
+                              ),
+                            ),
+                          ),
                           index: 2,
                         ),
                       ),
@@ -193,7 +201,15 @@ class OwnerDashboardScreen extends StatelessWidget {
                           icon: Icons.reviews_outlined,
                           label: 'Reviews',
                           color: AppTheme.deepTeal,
-                          onTap: () {},
+                          // ── FIXED: now navigates to ReviewsScreen ──
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ReviewsScreen(
+                                businessName: 'My Business',
+                              ),
+                            ),
+                          ),
                           index: 3,
                         ),
                       ),
@@ -302,7 +318,14 @@ class OwnerDashboardScreen extends StatelessWidget {
           ),
 
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+            padding: EdgeInsets.fromLTRB(
+              20,
+              0,
+              20,
+              40 +
+                  MediaQuery.of(context).padding.bottom +
+                  kBottomNavigationBarHeight,
+            ),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
@@ -318,21 +341,27 @@ class OwnerDashboardScreen extends StatelessWidget {
     );
   }
 
+  // ── FIXED: added useSafeArea + useRootNavigator to clear nav bar ──
   void _showCreateBusinessSheet(BuildContext context,
       {String? businessName}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      useSafeArea: true,
+      useRootNavigator: true,
       builder: (_) => _CreateBusinessSheet(existingName: businessName),
     );
   }
 
+  // ── FIXED: added useSafeArea + useRootNavigator to clear nav bar ──
   void _showCreateOfferSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      useSafeArea: true,
+      useRootNavigator: true,
       builder: (_) => const _CreateOfferSheet(),
     );
   }
@@ -531,7 +560,9 @@ class _BusinessListingCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      business.category as String,
+                      (business.vibes as List).isNotEmpty
+                          ? (business.vibes as List).first as String
+                          : '',
                       style: GoogleFonts.nunito(
                         fontSize: 12,
                         color: AppTheme.mutedText,
@@ -585,7 +616,7 @@ class _BusinessListingCard extends StatelessWidget {
               const SizedBox(width: 8),
               _InfoPill(
                 icon: Icons.place_outlined,
-                label: business.district as String,
+                label: business.address as String,
                 color: AppTheme.oceanBlue,
               ),
             ],
@@ -619,7 +650,14 @@ class _BusinessListingCard extends StatelessWidget {
                   icon: Icons.bar_chart_outlined,
                   label: 'Stats',
                   color: AppTheme.forestGreen,
-                  onTap: () {},
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AnalyticsScreen(
+                        businessName: business.name as String,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -1242,8 +1280,7 @@ class _CreateOfferSheetState extends State<_CreateOfferSheet> {
                       style: GoogleFonts.nunito(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color:
-                            isSelected ? Colors.white : AppTheme.darkInk,
+                        color: isSelected ? Colors.white : AppTheme.darkInk,
                       ),
                     ),
                   ),

@@ -11,12 +11,13 @@ class AppProvider extends ChangeNotifier {
   AppUser? get currentUser => _currentUser;
   bool get isLoggedIn => _isLoggedIn;
 
-  void login(String email, String name) {
+  // ✅ Added optional `role` param — defaults to tourist so nothing else breaks
+  void login(String email, String name, {UserRole role = UserRole.tourist}) {
     _currentUser = AppUser(
       id: 'user-001',
       name: name,
       email: email,
-      role: UserRole.tourist,
+      role: role,
     );
     _isLoggedIn = true;
     notifyListeners();
@@ -99,7 +100,6 @@ class AppProvider extends ChangeNotifier {
       _allPlaces.where((p) => _savedPlaceIds.contains(p.id)).toList();
 
   // ── Visited Places ─────────────────────────────────────
-  // ── Visited Places ─────────────────────────────────────
   final Set<String> _visitedPlaceIds = {};
 
   bool isVisited(String placeId) => _visitedPlaceIds.contains(placeId);
@@ -118,8 +118,7 @@ class AppProvider extends ChangeNotifier {
 
   int get visitedCount => _visitedPlaceIds.length;
 
-  // ✅ ADD THIS BLOCK 👇
-  // ── Bottom Navigation / Tabs ─────────────────────────
+  // ── Bottom Navigation / Tabs ──────────────────────────
   int _currentTab = 0;
 
   int get currentTab => _currentTab;
@@ -136,9 +135,8 @@ class AppProvider extends ChangeNotifier {
   bool get isDarkMode => _themeMode == ThemeMode.dark;
 
   void toggleTheme() {
-    _themeMode = _themeMode == ThemeMode.light
-        ? ThemeMode.dark
-        : ThemeMode.light;
+    _themeMode =
+        _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
     notifyListeners();
   }
 

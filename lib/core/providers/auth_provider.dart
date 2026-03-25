@@ -1,8 +1,14 @@
+// lib/core/providers/auth_provider.dart
 import 'package:flutter/foundation.dart';
+import '../models/user.dart'; // ✅ UserRole lives here — single source of truth
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 
 enum AuthStatus { unknown, authenticated, unauthenticated }
+
+// ⚠️  DO NOT redefine UserRole here — it is imported from core/models/user.dart
+// Having two definitions causes: "The argument type 'UserRole' can't be
+// assigned to the parameter type 'UserRole'" errors at compile time.
 
 class AuthNotifier extends ChangeNotifier {
   static final AuthNotifier _instance = AuthNotifier._internal();
@@ -15,7 +21,9 @@ class AuthNotifier extends ChangeNotifier {
   String? _userEmail;
   String? _error;
   bool _isLoading = false;
+  UserRole? _userRole;
 
+  // ── Getters ──────────────────────────────
   AuthStatus get status => _status;
   String? get userId => _userId;
   String? get userName => _userName;
@@ -23,7 +31,9 @@ class AuthNotifier extends ChangeNotifier {
   String? get error => _error;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
+  UserRole? get userRole => _userRole;
 
+  // ── Auth status check ─────────────────────
   Future<void> checkAuthStatus() async {
     _setLoading(true);
     try {
@@ -39,6 +49,7 @@ class AuthNotifier extends ChangeNotifier {
           userId: user['id']?.toString() ?? '',
           userName: user['name']?.toString() ?? '',
           userEmail: user['email']?.toString() ?? '',
+          role: _roleFromString(user['role']?.toString()),
         );
       } else {
         await ApiService().clearTokens();
@@ -52,21 +63,32 @@ class AuthNotifier extends ChangeNotifier {
     }
   }
 
+  // ── Register ─────────────────────────────
+  // ✅ `role` param added — receives the user's selection from RegisterScreen
   Future<String?> register({
     required String name,
     required String email,
     required String password,
     required String nationality,
+    UserRole role = UserRole.tourist,
   }) async {
     _setLoading(true);
     _error = null;
     try {
-      final firebase = await AuthService()
-          .registerWithEmail(name: name, email: email, password: password);
+      final firebase = await AuthService().registerWithEmail(
+        name: name,
+        email: email,
+        password: password,
+      );
       if (firebase.isError) return firebase.error;
 
       final backend = await ApiService().register(
-          name: name, email: email, password: password, nationality: nationality);
+        name: name,
+        email: email,
+        password: password,
+        nationality: nationality,
+        role: _roleToString(role), // ✅ send to backend
+      );
 
       if (backend.isSuccess && backend.data != null) {
         await ApiService().saveTokens(
@@ -75,10 +97,12 @@ class AuthNotifier extends ChangeNotifier {
         );
       }
 
+      // ✅ Store chosen role — not hardcoded tourist
       _setAuthenticated(
         userId: firebase.user?.uid ?? '',
         userName: name,
         userEmail: email,
+        role: role,
       );
       return null;
     } catch (e) {
@@ -88,6 +112,7 @@ class AuthNotifier extends ChangeNotifier {
     }
   }
 
+  // ── Email/Password Login ─────────────────
   Future<String?> login({
     required String email,
     required String password,
@@ -95,11 +120,14 @@ class AuthNotifier extends ChangeNotifier {
     _setLoading(true);
     _error = null;
     try {
-      final firebase =
-          await AuthService().loginWithEmail(email: email, password: password);
+      final firebase = await AuthService().loginWithEmail(
+        email: email,
+        password: password,
+      );
       if (firebase.isError) return firebase.error;
 
-      final backend = await ApiService().login(email: email, password: password);
+      final backend =
+          await ApiService().login(email: email, password: password);
 
       if (backend.isSuccess && backend.data != null) {
         final userData = backend.data?['user'];
@@ -111,15 +139,18 @@ class AuthNotifier extends ChangeNotifier {
           userId: userData?['id']?.toString() ?? '',
           userName: userData?['name']?.toString() ?? '',
           userEmail: email,
+          role: _roleFromString(userData?['role']?.toString()),
         );
       } else {
+        // Fallback: Firebase only
         _setAuthenticated(
           userId: firebase.user?.uid ?? '',
-          userName: firebase.user?.displayName ?? email.split('@').first,
+          userName:
+              firebase.user?.displayName ?? email.split('@').first,
           userEmail: email,
+          role: UserRole.tourist,
         );
       }
-
       return null;
     } catch (e) {
       return 'Login failed: $e';
@@ -128,6 +159,7 @@ class AuthNotifier extends ChangeNotifier {
     }
   }
 
+  // ── Google Login ─────────────────────────
   Future<String?> loginWithGoogle() async {
     _setLoading(true);
     _error = null;
@@ -138,6 +170,7 @@ class AuthNotifier extends ChangeNotifier {
       final user = result.user;
       final idToken = await user?.getIdToken();
 
+      UserRole role = UserRole.tourist;
       if (idToken != null) {
         final backend = await ApiService().googleAuth(idToken);
         if (backend.isSuccess && backend.data != null) {
@@ -145,15 +178,18 @@ class AuthNotifier extends ChangeNotifier {
             access: backend.data?['access_token']?.toString() ?? '',
             refresh: backend.data?['refresh_token']?.toString() ?? '',
           );
+          role = _roleFromString(
+              backend.data?['user']?['role']?.toString());
         }
       }
 
       _setAuthenticated(
         userId: user?.uid ?? '',
-        userName: user?.displayName ?? user?.email?.split('@').first ?? '',
+        userName:
+            user?.displayName ?? user?.email?.split('@').first ?? '',
         userEmail: user?.email ?? '',
+        role: role,
       );
-
       return null;
     } catch (e) {
       return 'Google login failed: $e';
@@ -162,6 +198,7 @@ class AuthNotifier extends ChangeNotifier {
     }
   }
 
+  // ── Password Reset ───────────────────────
   Future<String?> sendPasswordReset(String email) async {
     try {
       final result = await AuthService().sendPasswordReset(email);
@@ -172,21 +209,35 @@ class AuthNotifier extends ChangeNotifier {
     }
   }
 
+  // ── Logout ──────────────────────────────
   Future<void> logout() async {
     await AuthService().signOut();
     await ApiService().clearTokens();
     _setUnauthenticated();
   }
 
+  // ── Role conversion helpers ───────────────
+  UserRole _roleFromString(String? value) {
+    if (value == 'business_owner') return UserRole.businessOwner;
+    return UserRole.tourist;
+  }
+
+  String _roleToString(UserRole role) {
+    return role == UserRole.businessOwner ? 'business_owner' : 'tourist';
+  }
+
+  // ── Internal helpers ─────────────────────
   void _setAuthenticated({
     required String userId,
     required String userName,
     required String userEmail,
+    UserRole? role,
   }) {
     _status = AuthStatus.authenticated;
     _userId = userId;
     _userName = userName;
     _userEmail = userEmail;
+    _userRole = role ?? UserRole.tourist;
     notifyListeners();
   }
 
@@ -195,6 +246,7 @@ class AuthNotifier extends ChangeNotifier {
     _userId = null;
     _userName = null;
     _userEmail = null;
+    _userRole = null;
     notifyListeners();
   }
 

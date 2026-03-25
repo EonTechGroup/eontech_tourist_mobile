@@ -1,5 +1,3 @@
-import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 enum ConnectivityStatus { online, offline, unknown }
@@ -41,10 +39,10 @@ class ConnectivityProvider extends ChangeNotifier {
   static void showOfflineSnackbar(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Row(
+        content: const Row(
           children: [
-            const Icon(Icons.wifi_off_rounded, color: Colors.white, size: 18),
-            const SizedBox(width: 10),
+            Icon(Icons.wifi_off_rounded, color: Colors.white, size: 18),
+            SizedBox(width: 10),
             Text(
               'No internet connection',
               style: TextStyle(

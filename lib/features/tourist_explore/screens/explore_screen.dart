@@ -331,7 +331,7 @@ class _PlaceList extends StatelessWidget {
 }
 
 class _ShimmerList extends StatelessWidget {
-  const _ShimmerList({super.key});
+  const _ShimmerList();
 
   @override
   Widget build(BuildContext context) {
