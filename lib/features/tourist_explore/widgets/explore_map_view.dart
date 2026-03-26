@@ -21,7 +21,7 @@ class _ExploreMapViewState extends State<ExploreMapView> {
   final MapController _mapController = MapController();
   Place? _selectedPlace;
 
-  // 🔑 Replace with your MapTiler API Key
+
   static const String _mapTilerKey = "B0KHYBETqd5joxCCKflc";
 
   @override
@@ -41,20 +41,20 @@ class _ExploreMapViewState extends State<ExploreMapView> {
             onTap: (_, __) => setState(() => _selectedPlace = null),
           ),
           children: [
-            // 🌍 Production Tile Layer (MapTiler)
+            // Production Tile Layer (MapTiler)
             TileLayer(
               urlTemplate:
                   'https://api.maptiler.com/maps/outdoor/{z}/{x}/{y}.png?key=$_mapTilerKey',
               userAgentPackageName: 'com.eontech.tourist',
               maxZoom: 19,
 
-              // 🔥 Error handling
+          
               errorTileCallback: (tile, error, stackTrace) {
                 debugPrint("Tile load error: $error");
               },
             ),
 
-            // 📍 Markers
+            // Markers
             MarkerLayer(
               markers: widget.places.map((place) {
                 final isSelected = _selectedPlace?.id == place.id;
@@ -67,7 +67,7 @@ class _ExploreMapViewState extends State<ExploreMapView> {
                     onTap: () {
                       setState(() => _selectedPlace = place);
 
-                      // 🔥 Smooth zoom to place
+                      // Smooth zoom to place
                       _mapController.move(
                         LatLng(place.latitude, place.longitude),
                         15,
@@ -105,7 +105,7 @@ class _ExploreMapViewState extends State<ExploreMapView> {
           ],
         ),
 
-        // 📌 Selected Place Card
+        //Selected Place Card
         if (_selectedPlace != null)
           Positioned(
             bottom: 16,
@@ -123,7 +123,7 @@ class _ExploreMapViewState extends State<ExploreMapView> {
             ),
           ),
 
-        // 📄 Attribution (Required)
+        //Attribution (Required)
         Positioned(
           bottom: 4,
           right: 8,

@@ -41,7 +41,7 @@ class PlaceDetailScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: CustomScrollView(
         slivers: [
-          // ── Hero image app bar ──────────────────────────
+          //Hero image app bar
           SliverAppBar(
             expandedHeight: 280,
             pinned: true,
@@ -112,14 +112,14 @@ class PlaceDetailScreen extends StatelessWidget {
             ),
           ),
 
-          // ── Content ─────────────────────────────────────
+          //Content
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Category + district
+                  
                   Row(
                     children: [
                       Container(
@@ -385,7 +385,7 @@ class PlaceDetailScreen extends StatelessWidget {
   }
 }
 
-// ── Info Chip ─────────────────────────────────────────────────
+//Info Chip 
 
 class _InfoChip extends StatelessWidget {
   final IconData icon;
@@ -423,7 +423,7 @@ class _InfoChip extends StatelessWidget {
   }
 }
 
-// ── Tag Badge ─────────────────────────────────────────────────
+//Tag Badge
 
 class _TagBadge extends StatelessWidget {
   final String label;
@@ -449,7 +449,7 @@ class _TagBadge extends StatelessWidget {
   }
 }
 
-// ── Contact Button ────────────────────────────────────────────
+//Contact Button
 
 class _ContactButton extends StatelessWidget {
   final IconData icon;

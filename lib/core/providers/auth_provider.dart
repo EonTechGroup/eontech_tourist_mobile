@@ -1,14 +1,11 @@
-// lib/core/providers/auth_provider.dart
+
 import 'package:flutter/foundation.dart';
-import '../models/user.dart'; // ✅ UserRole lives here — single source of truth
+import '../models/user.dart'; 
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 
 enum AuthStatus { unknown, authenticated, unauthenticated }
 
-// ⚠️  DO NOT redefine UserRole here — it is imported from core/models/user.dart
-// Having two definitions causes: "The argument type 'UserRole' can't be
-// assigned to the parameter type 'UserRole'" errors at compile time.
 
 class AuthNotifier extends ChangeNotifier {
   static final AuthNotifier _instance = AuthNotifier._internal();
@@ -64,7 +61,7 @@ class AuthNotifier extends ChangeNotifier {
   }
 
   // ── Register ─────────────────────────────
-  // ✅ `role` param added — receives the user's selection from RegisterScreen
+ 
   Future<String?> register({
     required String name,
     required String email,
@@ -87,7 +84,7 @@ class AuthNotifier extends ChangeNotifier {
         email: email,
         password: password,
         nationality: nationality,
-        role: _roleToString(role), // ✅ send to backend
+        role: _roleToString(role), 
       );
 
       if (backend.isSuccess && backend.data != null) {
@@ -97,7 +94,7 @@ class AuthNotifier extends ChangeNotifier {
         );
       }
 
-      // ✅ Store chosen role — not hardcoded tourist
+      
       _setAuthenticated(
         userId: firebase.user?.uid ?? '',
         userName: name,

@@ -118,7 +118,7 @@ class _ItineraryScreenState extends State<ItineraryScreen> {
       backgroundColor: AppTheme.softGrey,
       body: CustomScrollView(
         slivers: [
-          // ── Header ─────────────────────────
+          //Header 
           SliverAppBar(
             expandedHeight: 140,
             pinned: true,
@@ -169,8 +169,7 @@ class _ItineraryScreenState extends State<ItineraryScreen> {
             ),
           ),
 
-          // ── Day Selector ─────────────────────
-          // ── Day Selector ─────────────────────
+        
           SliverToBoxAdapter(
             child: Container(
               color: AppTheme.oceanBlue,
@@ -208,7 +207,7 @@ class _ItineraryScreenState extends State<ItineraryScreen> {
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
 
-                              // ✅ FIX 1: Reduced vertical padding
+                             
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 18,
                                 vertical: 8,
@@ -237,7 +236,7 @@ class _ItineraryScreenState extends State<ItineraryScreen> {
                                     : [],
                               ),
 
-                              // ✅ FIX 2 + 3: Center + FittedBox
+                              
                               child: FittedBox(
                                 fit: BoxFit.scaleDown,
                                 child: Column(
@@ -278,7 +277,7 @@ class _ItineraryScreenState extends State<ItineraryScreen> {
             ),
           ),
 
-          // ── Stats Bar ─────────────────────────
+          //Stats Bar
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
@@ -306,7 +305,7 @@ class _ItineraryScreenState extends State<ItineraryScreen> {
             ),
           ),
 
-          // ── Timeline List ─────────────────────
+          //Timeline List
           entries.isEmpty
               ? SliverFillRemaining(
                   child: _EmptyDay(
@@ -344,8 +343,8 @@ class _ItineraryScreenState extends State<ItineraryScreen> {
   }
 }
 
-// ── Timeline Card ─────────────────────────────
-// ── Timeline Card ─────────────────────────────
+
+//Timeline Card
 class _TimelineCard extends StatelessWidget {
   final _ItineraryEntry entry;
   final bool isLast;
@@ -369,12 +368,12 @@ class _TimelineCard extends StatelessWidget {
             SizedBox(
               width: 56,
               child: Column(
-                mainAxisSize: MainAxisSize.max, // ✅ FIXED
+                mainAxisSize: MainAxisSize.max, 
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
                     entry.time,
-                    maxLines: 1, // ✅ extra safety
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.nunito(
                       fontSize: 11,
@@ -384,7 +383,6 @@ class _TimelineCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Expanded(
-                    // ✅ FIXED (instead of Flexible)
                     child: Container(
                       width: 2,
                       color: isLast ? Colors.transparent : AppTheme.borderColor,
@@ -395,7 +393,7 @@ class _TimelineCard extends StatelessWidget {
             ),
             const SizedBox(width: 8),
 
-            // ── Card ─────────────────────────
+            //Card
             Expanded(
               child:
                   Container(
@@ -498,7 +496,7 @@ class _TimelineCard extends StatelessWidget {
   }
 }
 
-// ── Add Button ─────────────────────────────
+//Add Button
 class _AddButton extends StatelessWidget {
   final VoidCallback onTap;
   const _AddButton({required this.onTap});
@@ -534,7 +532,7 @@ class _AddButton extends StatelessWidget {
   }
 }
 
-// ── Stat Chip ─────────────────────────────
+//Stat Chip
 class _StatChip extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -573,7 +571,7 @@ class _StatChip extends StatelessWidget {
   }
 }
 
-// ── Empty Day ─────────────────────────────
+//Empty Day
 class _EmptyDay extends StatelessWidget {
   final int day;
   final VoidCallback onAdd;
@@ -638,7 +636,7 @@ class _EmptyDay extends StatelessWidget {
   }
 }
 
-// ── Add Stop Bottom Sheet ─────────────────
+//Add Stop Bottom Sheet
 class _AddStopSheet extends StatelessWidget {
   final int selectedDay;
   const _AddStopSheet({required this.selectedDay});
@@ -686,7 +684,7 @@ class _AddStopSheet extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          // ✅ FIXED BUTTON
+        
           GestureDetector(
             onTap: () {
               // Close bottom sheet
@@ -720,7 +718,7 @@ class _AddStopSheet extends StatelessWidget {
   }
 }
 
-// ── Data Model ─────────────────────────────
+//Data Model
 class _ItineraryEntry {
   final String time;
   final String name;

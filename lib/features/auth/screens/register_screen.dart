@@ -27,7 +27,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _agreedToTerms = false;
   String _selectedNationality = 'Other';
 
-  // ── Role selection ──────────────────────────────────────────
+  //Role selection
   UserRole _selectedRole = UserRole.tourist;
 
   static const List<String> _nationalities = [
@@ -51,7 +51,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  // ── Email register ──────────────────────────────────────────
+  //Email register
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
     if (!_agreedToTerms) {
@@ -61,7 +61,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
     setState(() => _isLoading = true);
 
-    // ✅ Pass selected role to AuthNotifier
+    //Pass selected role to AuthNotifier
     final error = await context.read<AuthNotifier>().register(
           name: _nameController.text.trim(),
           email: _emailController.text.trim(),
@@ -75,7 +75,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (error == null) {
       final auth = context.read<AuthNotifier>();
-      // ✅ Pass selected role to AppProvider so nav bar updates
+      //Pass selected role to AppProvider so nav bar updates
       context.read<AppProvider>().login(
             auth.userEmail ?? _emailController.text.trim(),
             auth.userName ?? _nameController.text.trim(),
@@ -87,7 +87,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  // ── Google Sign-In ──────────────────────────────────────────
+  //Google Sign-In
   Future<void> _googleSignIn() async {
     setState(() => _isGoogleLoading = true);
 
@@ -141,7 +141,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       backgroundColor: AppTheme.softGrey,
       body: CustomScrollView(
         slivers: [
-          // ── Image header ──────────────────────────────
+          //Image header
           SliverToBoxAdapter(
             child: SizedBox(
               height: MediaQuery.of(context).size.height * 0.28,
@@ -202,7 +202,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
 
-          // ── Form body ─────────────────────────────────
+          //Form body
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
@@ -216,7 +216,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         .fadeIn(duration: 400.ms, delay: 100.ms),
                     const SizedBox(height: 20),
 
-                    // ── Role Selector ──────────────────────────
+                    //Role Selector
                     _RoleSelector(
                       selectedRole: _selectedRole,
                       onChanged: (role) =>
@@ -224,7 +224,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ).animate().fadeIn(duration: 400.ms, delay: 130.ms),
                     const SizedBox(height: 16),
 
-                    // ── Personal details card ──────────────────
+                    //Personal details card
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -363,7 +363,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 }
 
-// ── Role Selector ─────────────────────────────────────────────
+//Role Selector
 
 class _RoleSelector extends StatelessWidget {
   final UserRole selectedRole;
@@ -552,7 +552,7 @@ class _RoleCard extends StatelessWidget {
   }
 }
 
-// ── Step Indicator ────────────────────────────────────────────
+//Step Indicator
 
 class _StepIndicator extends StatelessWidget {
   const _StepIndicator();

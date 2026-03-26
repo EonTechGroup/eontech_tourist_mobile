@@ -62,7 +62,7 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen>
     );
   }
 
-  // ───────────────── HEADER ─────────────────
+  //HEADER
   Widget _header() {
     return SliverAppBar(
       expandedHeight: 260,
@@ -150,7 +150,7 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen>
     );
   }
 
-  // ───────────────── TAB BAR ─────────────────
+  //TAB BAR
   Widget _tabBar() {
     return Container(
       color: Colors.white,
@@ -177,7 +177,7 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen>
     );
   }
 
-  // ───────────────── OVERVIEW ─────────────────
+  //OVERVIEW
   Widget _overview() {
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -190,7 +190,7 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen>
     );
   }
 
-  // ───────────────── OFFERS ─────────────────
+  //OFFERS
   Widget _offers() {
     final offers = MockData.offers
         .where((o) => o.businessId == business.id)
@@ -214,7 +214,7 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen>
     );
   }
 
-  // ───────────────── LOCATION ─────────────────
+  //LOCATION
   Widget _location() {
     final pos = LatLng(business.latitude, business.longitude);
 
@@ -246,7 +246,7 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen>
     );
   }
 
-  // ───────────────── BOTTOM BAR ─────────────────
+  //BOTTOM BAR
   Widget _bottomBar() {
     return Container(
       padding: const EdgeInsets.all(16),

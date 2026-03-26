@@ -43,7 +43,7 @@ class PlaceCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Image ──────────────────────────────────────
+            //Image
             Stack(
               children: [
                 ClipRRect(
@@ -163,7 +163,7 @@ class PlaceCard extends StatelessWidget {
               ],
             ),
 
-            // ── Info ───────────────────────────────────────
+            //Info
             Padding(
               padding: const EdgeInsets.all(10),
               child: Column(

@@ -70,7 +70,7 @@ class LoadingShimmer extends StatelessWidget {
     );
   }
 
-  // ── Pre-built: list tile placeholder ──────────────────
+
   static Widget listTile() {
     return Shimmer.fromColors(
       baseColor: const Color(0xFFE2E8F0),
@@ -126,7 +126,7 @@ class LoadingShimmer extends StatelessWidget {
     );
   }
 
-  // ── Pre-built: text line placeholder ──────────────────
+  
   static Widget line({double width = double.infinity, double height = 14}) {
     return Shimmer.fromColors(
       baseColor: const Color(0xFFE2E8F0),
@@ -142,7 +142,7 @@ class LoadingShimmer extends StatelessWidget {
     );
   }
 
-  // ── Pre-built: full page loader ────────────────────────
+ 
   static Widget page() {
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -199,7 +199,7 @@ class LoadingShimmer extends StatelessWidget {
     );
   }
 
-  // ── Generic shimmer box ────────────────────────────────
+  //Generic shimmer box 
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(

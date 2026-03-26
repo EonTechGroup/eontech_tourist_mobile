@@ -19,7 +19,7 @@ class OwnerDashboardScreen extends StatelessWidget {
       backgroundColor: const Color.fromARGB(255, 96, 148, 200),
       body: CustomScrollView(
         slivers: [
-          // ── Header ──────────────────────────────────
+          //Header────
           SliverAppBar(
             expandedHeight: 160,
             pinned: true,
@@ -100,7 +100,7 @@ class OwnerDashboardScreen extends StatelessWidget {
             ),
           ),
 
-          // ── Stats row ────────────────────────────────
+          //Stats row ─
           SliverToBoxAdapter(
             child: Container(
               color: AppTheme.deepTeal,
@@ -140,7 +140,7 @@ class OwnerDashboardScreen extends StatelessWidget {
             ),
           ),
 
-          // ── Quick actions ─────────────────────────────
+          //Quick actions
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
@@ -204,7 +204,7 @@ class OwnerDashboardScreen extends StatelessWidget {
             ),
           ),
 
-          // ── My listings ───────────────────────────────
+          //My listings
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
@@ -338,7 +338,7 @@ class OwnerDashboardScreen extends StatelessWidget {
   }
 }
 
-// ── Stat Card ─────────────────────────────────────────────────
+//Stat Card
 
 class _StatCard extends StatelessWidget {
   final String label;
@@ -404,7 +404,7 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-// ── Quick Action ──────────────────────────────────────────────
+//Quick Action
 
 class _QuickAction extends StatelessWidget {
   final IconData icon;
@@ -471,7 +471,7 @@ class _QuickAction extends StatelessWidget {
   }
 }
 
-// ── Business Listing Card ─────────────────────────────────────
+//Business Listing Card
 
 class _BusinessListingCard extends StatelessWidget {
   final dynamic business;
@@ -636,7 +636,7 @@ class _BusinessListingCard extends StatelessWidget {
   }
 }
 
-// ── Offer Card ────────────────────────────────────────────────
+//Offer Card
 
 class _OfferCard extends StatefulWidget {
   final dynamic offer;
@@ -780,7 +780,7 @@ class _OfferCardState extends State<_OfferCard> {
   }
 }
 
-// ── Helper Widgets ────────────────────────────────────────────
+//Helper Widgets
 
 class _InfoPill extends StatelessWidget {
   final IconData icon;
@@ -1092,7 +1092,7 @@ class _CreateBusinessSheetState extends State<_CreateBusinessSheet> {
   }
 }
 
-// ── Create Offer Sheet ────────────────────────────────────────
+//Create Offer Sheet 
 
 class _CreateOfferSheet extends StatefulWidget {
   const _CreateOfferSheet();
@@ -1334,7 +1334,7 @@ class _CreateOfferSheetState extends State<_CreateOfferSheet> {
   }
 }
 
-// ── Sheet Field ───────────────────────────────────────────────
+//Sheet Field 
 
 class _SheetField extends StatelessWidget {
   final String label;
@@ -1401,7 +1401,7 @@ class _SheetField extends StatelessWidget {
   }
 }
 
-// ── Slider Section ────────────────────────────────────────────
+//Slider Section
 
 class _SliderSection extends StatelessWidget {
   final String label;

@@ -78,7 +78,7 @@ class EmergencyScreen extends StatelessWidget {
             ),
           ),
 
-          // ── SOS banner ───────────────────────────────
+          //SOS banner
           SliverToBoxAdapter(
             child: Container(
               color: AppTheme.coralRed,
@@ -101,7 +101,7 @@ class EmergencyScreen extends StatelessWidget {
             ),
           ),
 
-          // ── Contacts grid ─────────────────────────────
+          //Contacts grid─
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
@@ -138,7 +138,7 @@ class EmergencyScreen extends StatelessWidget {
             ),
           ),
 
-          // ── Safety tips ──────────────────────────────
+          //Safety tips
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
@@ -194,7 +194,7 @@ class EmergencyScreen extends StatelessWidget {
   }
 }
 
-// ── SOS Banner ────────────────────────────────────────────────
+//SOS Banner─────────
 
 class _SosBanner extends StatelessWidget {
   @override
@@ -290,8 +290,7 @@ class _SosBanner extends StatelessWidget {
   }
 }
 
-// ── Contact Card ──────────────────────────────────────────────
-
+//Contact Card
 class _ContactCard extends StatelessWidget {
   final Map<String, String> contact;
   final int index;
@@ -423,7 +422,7 @@ class _ContactCard extends StatelessWidget {
   }
 }
 
-// ── Safety Tip ────────────────────────────────────────────────
+// Safety Tip 
 
 class _SafetyTip extends StatelessWidget {
   final IconData icon;

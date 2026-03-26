@@ -13,9 +13,7 @@ class ConnectivityProvider extends ChangeNotifier {
   bool get isOnline => _status == ConnectivityStatus.online;
   bool get isOffline => _status == ConnectivityStatus.offline;
 
-  // ── Simple ping-based check ─────────────────────────────────────────────
-  // We avoid connectivity_plus to keep dependencies minimal
-  // Uses API service to detect connectivity
+
 
   void setOnline() {
     if (_status == ConnectivityStatus.online) return;

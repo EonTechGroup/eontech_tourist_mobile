@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors
+
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -27,7 +27,7 @@ class ProfileScreen extends StatelessWidget {
       backgroundColor: AppTheme.softGrey,
       body: CustomScrollView(
         slivers: [
-          // ── Header ───────────────────────────────────────
+          //Header
           SliverToBoxAdapter(
             child: Container(
               color: Colors.white,
@@ -106,7 +106,7 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
 
-          // ── Saved places ─────────────────────────────────
+          //Saved places
           if (saved.isNotEmpty) ...[
             SliverToBoxAdapter(
               child: Padding(
@@ -218,7 +218,7 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-// ── Stat Chip ─────────────────────────────────────────────────
+//Stat Chip─
 
 class _StatChip extends StatelessWidget {
   final IconData icon;
@@ -263,7 +263,7 @@ class _StatChip extends StatelessWidget {
   }
 }
 
-// ── Settings Tile ─────────────────────────────────────────────
+//Settings Tile
 
 class _SettingsTile extends StatelessWidget {
   final IconData icon;
@@ -301,7 +301,7 @@ class _SettingsTile extends StatelessWidget {
   }
 }
 
-// ── Guest Profile ─────────────────────────────────────────────
+//Guest Profile
 
 class _GuestProfile extends StatelessWidget {
   final VoidCallback onLogin;

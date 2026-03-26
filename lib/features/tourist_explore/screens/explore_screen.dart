@@ -27,14 +27,13 @@ class ExploreScreen extends StatefulWidget {
 class _ExploreScreenState extends State<ExploreScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  late AppProvider _provider; // ✅ FIXED
+  late AppProvider _provider; 
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
 
-    /// ✅ SAFE provider access
     _provider = context.read<AppProvider>();
 
     _tabController = TabController(length: 2, vsync: this);
@@ -88,7 +87,6 @@ class _ExploreScreenState extends State<ExploreScreen>
   void dispose() {
     _tabController.dispose();
 
-    /// ✅ NO CONTEXT HERE
     _provider.stopListeningOffers();
 
     super.dispose();

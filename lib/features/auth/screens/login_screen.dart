@@ -39,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // ── Email login ───────────────────────────────────────────────────────────
+  //Email login
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
@@ -55,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (error == null) {
       final auth = context.read<AuthNotifier>();
-      // ✅ Read role set by backend response in AuthNotifier
+      //Read role set by backend response in AuthNotifier
       final role = auth.userRole ?? UserRole.tourist;
       context.read<AppProvider>().login(
             auth.userEmail ?? _emailController.text.trim(),
@@ -68,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // ── Google Sign-In ────────────────────────────────────────────────────────
+  //Google Sign-In
 
   Future<void> _googleSignIn() async {
     setState(() => _isGoogleLoading = true);
@@ -92,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // ── Forgot password ───────────────────────────────────────────────────────
+  //Forgot password
 
   void _forgotPassword() {
     final emailCtrl =
@@ -180,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  //Helpers
 
   void _showError(String message) {
     _showSnackBar(message, AppTheme.coralRed, icon: Icons.error_outline);
@@ -219,7 +219,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // ── Background image top half ─────────────────────
+          //Background image top half
           Positioned(
             top: 0,
             left: 0,
@@ -267,7 +267,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          // ── Form card ──────────────────────────────────────
+          //Form card──
           Positioned(
             top: MediaQuery.of(context).size.height * 0.32,
             left: 0,
@@ -413,7 +413,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-// ── Or Divider ────────────────────────────────────────────────────────────────
+//Or Divider─
 
 class _OrDivider extends StatelessWidget {
   final String label;
@@ -437,7 +437,7 @@ class _OrDivider extends StatelessWidget {
   }
 }
 
-// ── Social Button ─────────────────────────────────────────────────────────────
+//Social Button
 
 class _SocialButton extends StatelessWidget {
   final VoidCallback onTap;
@@ -506,7 +506,7 @@ class _SocialButton extends StatelessWidget {
   }
 }
 
-// ── Google Logo ───────────────────────────────────────────────────────────────
+//Google Logo 
 
 class _GoogleLogo extends StatelessWidget {
   const _GoogleLogo();

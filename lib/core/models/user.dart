@@ -1,11 +1,10 @@
 // lib/core/models/user.dart
 
 // ── UserRole enum ─────────────────────────────────────────────
-// Single source of truth — imported by both AppProvider and AuthNotifier.
-// DO NOT redefine UserRole in auth_provider.dart — import from here instead.
+
 enum UserRole { tourist, businessOwner }
 
-// ── AppUser model ─────────────────────────────────────────────
+//AppUser model
 class AppUser {
   final String id;
   final String name;

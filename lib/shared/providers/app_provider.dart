@@ -4,14 +4,14 @@ import '../../core/models/place.dart';
 import '../../core/utils/mock_data.dart';
 
 class AppProvider extends ChangeNotifier {
-  // ── Auth State ─────────────────────────────────────────
+  //Auth State
   AppUser? _currentUser;
   bool _isLoggedIn = false;
 
   AppUser? get currentUser => _currentUser;
   bool get isLoggedIn => _isLoggedIn;
 
-  // ✅ Added optional `role` param — defaults to tourist so nothing else breaks
+
   void login(String email, String name, {UserRole role = UserRole.tourist}) {
     _currentUser = AppUser(
       id: 'user-001',
@@ -30,7 +30,7 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Places State ───────────────────────────────────────
+  //Places State
   final List<Place> _allPlaces = MockData.places;
   String _selectedCategory = 'all';
   String _selectedDistrict = 'All';
@@ -82,7 +82,7 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Saved Places ───────────────────────────────────────
+  //Saved Places
   final Set<String> _savedPlaceIds = {};
 
   bool isSaved(String placeId) => _savedPlaceIds.contains(placeId);
@@ -99,7 +99,7 @@ class AppProvider extends ChangeNotifier {
   List<Place> get savedPlaces =>
       _allPlaces.where((p) => _savedPlaceIds.contains(p.id)).toList();
 
-  // ── Visited Places ─────────────────────────────────────
+  //Visited Places
   final Set<String> _visitedPlaceIds = {};
 
   bool isVisited(String placeId) => _visitedPlaceIds.contains(placeId);
@@ -118,7 +118,7 @@ class AppProvider extends ChangeNotifier {
 
   int get visitedCount => _visitedPlaceIds.length;
 
-  // ── Bottom Navigation / Tabs ──────────────────────────
+  //Bottom Navigation / Tabs
   int _currentTab = 0;
 
   int get currentTab => _currentTab;
@@ -128,7 +128,7 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Theme ──────────────────────────────────────────────
+  //Theme
   ThemeMode _themeMode = ThemeMode.light;
   ThemeMode get themeMode => _themeMode;
 
@@ -145,7 +145,7 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Onboarding ─────────────────────────────────────────
+  //Onboarding
   bool _hasSeenOnboarding = false;
   bool get hasSeenOnboarding => _hasSeenOnboarding;
 
